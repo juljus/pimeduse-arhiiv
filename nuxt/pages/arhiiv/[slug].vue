@@ -1,16 +1,19 @@
 <template>
-    <div>
+    <main>
         <ContentRenderer v-if="page" :value="page" />
-    </div>
+    </main>
 </template>
 
 <script setup>
     const route = useRoute()
 
     const { data: page } = await useAsyncData(route.path, () => {
-        return queryCollection('main_page').first()
+        return queryCollection('arhiiv').path(route.path).first()
     })
-</script>
+
+    console.log(route.path)
+
+    </script>
 
 <style>
 
