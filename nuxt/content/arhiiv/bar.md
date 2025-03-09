@@ -1,3 +1,7 @@
+---
+title: Bar
+---
+
 # bar
 
 ## lorem ipsum

@@ -1,9 +1,9 @@
 <template>
-    <div class="text-gray-400 bg-stone-900 font-mono h-screen">
+    <div>
         <header>
 
             <!-- Navbar -->
-            <!-- <navbar/> -->
+            <navbar/>
 
         </header>
 
@@ -16,15 +16,24 @@
 </template>
 
 <style>
+    html {
+        font-family: 'Courier New', Courier, monospace;
+        background-color: #333;
+        color: #dbdbdb;
+    }
+
     h1 {
         font-size: 2rem;
-        color: aqua;
+        color: whitesmoke;
         font-weight: bold;
+        text-align: center;
     }
 
     h2 {
         font-size: 1.5rem;
-        color: aqua;
+        color: whitesmoke;
         font-style: italic;
+        /* underline */
+        text-decoration: underline;
     }
 </style>
