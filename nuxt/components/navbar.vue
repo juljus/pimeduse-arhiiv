@@ -2,7 +2,8 @@
     <div>
         <nav class="navbar">
             <div class="navbar-toggle" @click="toggleMenu" :class="{ open: menuOpen }">
-                &#9776;
+                <img v-if="!menuOpen" src="/menu_closed.png" alt="Open menu" />
+                <img v-else src="/menu_open.png" alt="Close menu" />
             </div>
             <div class="menu" :class="{ active: menuOpen }">
                 <ul>
@@ -38,21 +39,24 @@ export default {
 .navbar {
     position: fixed;
     top: 0;
-    width: 100%;
+    left: 0;
+    width: 100vw; /* Use viewport width instead of percentage */
     padding: 1rem;
-    background-color: transparent;
+    background-color: transparent; /* Remove the semi-transparent background */
     color: white;
     z-index: 1000;
+    box-sizing: border-box; /* Ensure padding is included in width calculation */
+    pointer-events: none; /* Allow clicks to pass through the navbar container */
 }
 
 .navbar-toggle {
-    position: absolute;
+    position: fixed; /* Change to fixed instead of absolute */
     top: 1rem;
     right: 0;
     cursor: pointer;
     transition: all 0.3s ease;
     z-index: 1001;
-    background-color: #444;
+    background-color: #383838; /* Darkened from #444 */
     padding: 10px 15px;
     border-top-left-radius: 3px;
     border-bottom-left-radius: 3px;
@@ -63,10 +67,17 @@ export default {
     border-top: 2px solid #666;
     border-bottom: 2px solid #666;
     box-shadow: -3px 3px 0px #222;
+    pointer-events: auto; /* Ensure the button can be clicked */
+}
+
+.navbar-toggle img {
+    width: 24px;
+    height: 24px;
+    display: block;
 }
 
 .navbar-toggle:hover {
-    background-color: #555;
+    background-color: #4a4a4a; /* Adjusted hover color to match darker base */
 }
 
 .navbar-toggle.open {
@@ -80,13 +91,14 @@ export default {
     right: 0;
     width: 250px;
     height: 100%;
-    background-color: #444;
+    background-color: #383838; /* Darkened from #444 to match button */
     padding: 2rem 1rem 1rem;
     transform: translateX(100%);
     transition: transform 0.3s ease;
     z-index: 1000;
     border-left: 2px solid #666;
     box-shadow: -5px 0px 15px rgba(0, 0, 0, 0.5);
+    pointer-events: auto; /* Ensure the menu can be clicked */
 }
 
 .menu.active {

@@ -1,7 +1,3 @@
----
-title: foo
----
-
 # foo
 
 ## dolor sit amet

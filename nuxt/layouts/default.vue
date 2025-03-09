@@ -17,23 +17,36 @@
 
 <style>
     html {
-        font-family: 'Courier New', Courier, monospace;
-        background-color: #333;
-        color: #dbdbdb;
+        font-family: garamond;
+        background-color: #232323;
+
+        color: whitesmoke;
+    }
+
+    body {
+        /* mina */
+        margin: 2em;
     }
 
     h1 {
-        font-size: 2rem;
-        color: whitesmoke;
-        font-weight: bold;
+        color: white;
+        font-size: 2.3rem;
+
+        /* mina */
         text-align: center;
+        font-weight: bold;
+        margin-bottom: 1em;
     }
 
     h2 {
         font-size: 1.5rem;
-        color: whitesmoke;
+        color: white;
+
+        /* mina */
         font-style: italic;
-        /* underline */
-        text-decoration: underline;
+        border-bottom: 0.001em solid rgb(110, 110, 110);
+        margin-bottom: 0.8em;
+        padding-bottom: 0;
+        margin-top: 1.5em;
     }
 </style>
