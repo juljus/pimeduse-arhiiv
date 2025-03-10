@@ -138,8 +138,15 @@ onMounted(() => {
         .then((response) => response.json())
         .then((data) => {
             if (data.files) {
-                // Add the directory path to each filename
-                images.value = data.files.map(file => `/pildid/${file}`);
+                // Filter out system files like .DS_Store and add the directory path
+                images.value = data.files
+                    .filter(file => {
+                        // Filter out .DS_Store and other non-image files
+                        const isSystemFile = file === '.DS_Store';
+                        const hasImageExtension = /\.(jpg|jpeg|png|gif|webp|svg|bmp|tiff)$/i.test(file);
+                        return !isSystemFile && hasImageExtension;
+                    })
+                    .map(file => `/pildid/${file}`);
                 console.log('images: ', images.value);
             } else {
                 errorMessage.value = 'No files found';
