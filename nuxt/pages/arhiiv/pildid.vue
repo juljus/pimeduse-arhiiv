@@ -33,7 +33,11 @@
                 </button>
                 
                 <!-- Image -->
-                <img :src="currentImage" class="modal-image" alt="Preview" @click.stop>
+                <div class="modal-image-container">
+                    <img :src="currentImage" class="modal-image" alt="Preview" @click.stop>
+                    <!-- Image name display -->
+                    <div class="image-name">{{ currentImageName }}</div>
+                </div>
                 
                 <!-- Next image button -->
                 <button v-if="hasNextImage" 
@@ -57,12 +61,18 @@ const images = ref([]);
 const previewOpen = ref(false);
 const currentImage = ref('');
 const currentIndex = ref(0);
+const currentImageName = ref('');
 
 // Open preview modal
 function openPreview(image) {
     console.log('Opening preview for:', image);
     currentImage.value = image;
     currentIndex.value = images.value.indexOf(image);
+    
+    // Extract the filename from the path and remove extension
+    const filename = image.split('/').pop();
+    currentImageName.value = filename.replace(/\.[^/.]+$/, '');
+    
     previewOpen.value = true;
     document.body.style.overflow = 'hidden';
 }
@@ -79,6 +89,8 @@ function navigateToPrevious() {
     if (currentIndex.value > 0) {
         currentIndex.value--;
         currentImage.value = images.value[currentIndex.value];
+        // Update the image name when navigating and remove extension
+        currentImageName.value = currentImage.value.split('/').pop().replace(/\.[^/.]+$/, '');
     }
 }
 
@@ -87,6 +99,8 @@ function navigateToNext() {
     if (currentIndex.value < images.value.length - 1) {
         currentIndex.value++;
         currentImage.value = images.value[currentIndex.value];
+        // Update the image name when navigating and remove extension
+        currentImageName.value = currentImage.value.split('/').pop().replace(/\.[^/.]+$/, '');
     }
 }
 
@@ -117,20 +131,24 @@ function handleKeyDown(e) {
     }
 }
 
-// Load images on component mount
+// Fetch images from the server
+const errorMessage = ref(null);
 onMounted(() => {
-    // In a real application, you might want to fetch this list from the server
-    // For now, we'll simulate accessing images from the public folder
-    const imageFiles = [
-        '/pildid/image1.png',
-        '/pildid/image2.png',
-        '/pildid/image3.png',
-        '/pildid/image4.png',
-    ];
+    fetch('/api/images')
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.files) {
+                // Add the directory path to each filename
+                images.value = data.files.map(file => `/pildid/${file}`);
+                console.log('images: ', images.value);
+            } else {
+                errorMessage.value = 'No files found';
+            }
+        })
+        .catch(() => {
+            errorMessage.value = 'Error fetching files';
+        });
     
-    console.log('Loading images:', imageFiles);
-    images.value = imageFiles;
-
     window.addEventListener('keydown', handleKeyDown);
 });
 
@@ -156,6 +174,14 @@ onBeforeUnmount(() => {
     height: 160px;
     overflow: hidden;
     position: relative;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.image-container:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
 }
 
 .image-container img {
@@ -215,12 +241,33 @@ onBeforeUnmount(() => {
     width: auto;
     height: auto;
     max-width: 95vw;
-    max-height: 95vh;
+    max-height: 85vh; /* Reduced slightly to make room for the name */
     min-width: 50vw; /* Ensure image has a minimum size */
     object-fit: contain;
     box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
     /* Add transition for smoother image changes */
     transition: opacity 0.3s ease;
+}
+
+/* Image name display */
+.modal-image-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.image-name {
+    color: white;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 8px 16px;
+    margin-top: 10px;
+    border-radius: 4px;
+    font-size: 16px;
+    max-width: 90vw;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Navigation arrows */
@@ -273,21 +320,45 @@ onBeforeUnmount(() => {
 /* Responsive adjustments */
 @media (min-width: 640px) {
     .image-grid {
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    }
-    
-    .image-container {
-        height: 180px;
-    }
-}
-
-@media (min-width: 768px) {
-    .image-grid {
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     }
     
     .image-container {
         height: 200px;
+    }
+}
+
+@media (min-width: 768px) {
+    .image-grid {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    }
+    
+    .image-container {
+        height: 220px;
+    }
+}
+
+/* Desktop adjustments */
+@media (min-width: 1024px) {
+    .image-grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 20px;
+    }
+    
+    .image-container {
+        height: 240px;
+    }
+}
+
+/* Large desktop adjustments */
+@media (min-width: 1280px) {
+    .image-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 24px;
+    }
+    
+    .image-container {
+        height: 280px;
     }
 }
 </style>
