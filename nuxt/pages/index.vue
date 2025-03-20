@@ -63,6 +63,9 @@ const lineRevealInterval = ref(null);
 const lineRevealDelay = 100; // milliseconds between revealing lines
 const showLineByLine = ref(false); // Flag to toggle between approaches
 
+// New: Total number of animation frames
+const totalFrames = ref(32);
+
 // Content variables using Nuxt Content
 
 // const { data: page, pending, error } = await useAsyncData('index-page', () => {
@@ -189,44 +192,20 @@ function startTextReveal() {
 
 // Fetch animation frames
 onMounted(async () => {
-    try {
-        const response = await fetch('/api/animation');
-        const data = await response.json();
-        
-        if (data.error) {
-            animationError.value = data.error;
-            animationLoading.value = false;
-            return;
-        }
-        
-        if (data.files && data.files.length > 0) {
-            // Sort the frames if they're numbered
-            frames.value = data.files.sort((a, b) => {
-                // Sort numerically if filenames contain numbers
-                const numA = parseInt(a.match(/\d+/)?.[0] || 0);
-                const numB = parseInt(b.match(/\d+/)?.[0] || 0);
-                return numA - numB;
-            });
-            
-            // Preload the first frame (the rest will load as needed)
-            const preloadImage = new Image();
-            preloadImage.src = `/animation/${frames.value[0]}`;
-            preloadImage.onload = () => {
-                currentFrameIndex.value = 0;
-                frameLoaded();
-            };
-            preloadImage.onerror = () => {
-                animationError.value = "Failed to load animation frames";
-                animationLoading.value = false;
-            };
-        } else {
-            animationError.value = "No animation frames found";
-            animationLoading.value = false;
-        }
-    } catch (error) {
-        animationError.value = "Error loading animation";
+    // Generate frames array based on totalFrames
+    frames.value = Array.from({ length: totalFrames.value }, (_, i) => `${i + 1}.png`);
+
+    // Preload the first frame
+    const preloadImage = new Image();
+    preloadImage.src = `/animation/${frames.value[0]}`;
+    preloadImage.onload = () => {
+        currentFrameIndex.value = 0;
+        frameLoaded();
+    };
+    preloadImage.onerror = () => {
+        animationError.value = "Failed to load animation frames";
         animationLoading.value = false;
-    }
+    };
 });
 
 // Clean up on component unmount
