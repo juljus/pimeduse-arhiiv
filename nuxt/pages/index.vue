@@ -53,7 +53,7 @@ const animationLoading = ref(true);
 const animationError = ref(null);
 const animationInterval = ref(null);
 const framesLoaded = ref(0);
-const frameDuration = 100; // milliseconds between frames, adjust as needed
+const frameDuration = 62.5; // milliseconds between frames, adjust as needed
 
 // Text reveal variables
 const animationComplete = ref(false);
