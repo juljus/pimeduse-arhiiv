@@ -5,9 +5,7 @@
             <div class="desktop-menu">
                 <a href="/" class="site-title">pimeduse arhiiv</a>
                 <div class="desktop-links">
-                    <a href="/arhiiv/kirju">kirju</a>
-                    <a href="/arhiiv/pimedusest">pimedusest</a>
-                    <a href="/arhiiv/soovitusi">soovitusi</a>
+                    <a v-for="file in files" :key="file" :href="`/arhiiv/${file}`">{{ file }}</a>
                     <a href="/arhiiv/pildid">pildid</a>
                 </div>
             </div>
