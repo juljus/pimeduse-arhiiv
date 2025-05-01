@@ -76,7 +76,7 @@ jobs:
         working-directory: ./nuxt
         run: |
           ${{ steps.detect-package-manager.outputs.manager }} run generate
-          touch ./.output/public/.nojekyll
+          touch ./nuxt/.output/public/.nojekyll
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
