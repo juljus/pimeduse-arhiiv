@@ -64,17 +64,8 @@ const lineRevealDelay = 100; // milliseconds between revealing lines
 const showLineByLine = ref(false); // Flag to toggle between approaches
 
 // Content variables using Nuxt Content
-
-// const { data: page, pending, error } = await useAsyncData('index-page', () => {
-//     return queryCollection('main_page').first();
-// });
-
-const { data: page, pending, error } = await useAsyncData('index-page', async () => {
-    if (import.meta.env.SSR) {
-        return await queryCollection('main_page').first();
-    } else {
-        return await fetch('/_payload.json').then(res => res.json());
-    }
+const { data: page, pending, error } = await useAsyncData('index-page', () => {
+    return queryCollection('main_page').first();
 });
 
 // Process page content into lines (client-side only)

@@ -7,17 +7,9 @@
 <script setup>
     const route = useRoute()
 
-    // const { data: page } = await useAsyncData(route.path, () => {
-    //     return queryCollection('arhiiv').path(route.path).first()
-    // })
-
-    const { data: page } = await useAsyncData(route.path, async () => {
-    if (import.meta.env.SSR) {
-        return await queryCollection('arhiiv').path(route.path).first();
-    } else {
-        return await fetch('/_payload.json').then(res => res.json());
-    }
-});
+    const { data: page } = await useAsyncData(route.path, () => {
+        return queryCollection('arhiiv').path(route.path).first()
+    })
 
     console.log(route.path)
 </script>
