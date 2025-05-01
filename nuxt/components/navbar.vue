@@ -5,7 +5,9 @@
             <div class="desktop-menu">
                 <a href="/" class="site-title">pimeduse arhiiv</a>
                 <div class="desktop-links">
-                    <a v-for="file in files" :key="file" :href="`/arhiiv/${file}`">{{ file }}</a>
+                    <a href="/arhiiv/kirju">kirju</a>
+                    <a href="/arhiiv/pimedusest">pimedusest</a>
+                    <a href="/arhiiv/soovitusi">soovitusi</a>
                     <a href="/arhiiv/pildid">pildid</a>
                 </div>
             </div>
@@ -18,7 +20,9 @@
             <div class="menu" :class="{ active: menuOpen }">
                 <ul>
                     <li><a href="/">pimeduse arhiiv</a></li>
-                    <li v-for="file in files" :key="file"><a :href="`/arhiiv/${file}`">{{ file }}</a></li>
+                    <li><a href="/arhiiv/kirju">kirju</a></li>
+                    <li><a href="/arhiiv/pimedusest">pimedusest</a></li>
+                    <li><a href="/arhiiv/soovitusi">soovitusi</a></li>
                     <li><a href="/arhiiv/pildid">pildid</a></li>
                 </ul>
             </div>
