@@ -22,7 +22,11 @@ export default defineEventHandler(async (event) => {
         console.error('Git Pull and Build Errors:', stderr);
 
         // Restart PM2 process only after the build is complete
-        exec('pm2 restart pimeduse-arhiiv', { cwd: '/Users/juljus/Documents/GitHub/pimeduse-arhiiv/nuxt' }, (pm2Error, pm2Stdout, pm2Stderr) => {
+        exec('pm2 restart pimeduse-arhiiv', {
+            cwd: '/Users/juljus/Documents/GitHub/pimeduse-arhiiv/nuxt',
+            shell: '/bin/bash',
+            env: { ...process.env, PATH: '/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin' }
+        }, (pm2Error, pm2Stdout, pm2Stderr) => {
             if (pm2Error) {
                 console.error('Error restarting PM2 process:', pm2Error);
                 return;
