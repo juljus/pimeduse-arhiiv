@@ -17,7 +17,7 @@
 <style>
     html {
         font-family: garamond;
-        background-color: #232323;
+        background-color: #121212; /* Changed to a darker background */
         color: whitesmoke;
         font-size: 16px; /* Base font size for mobile */
     }
