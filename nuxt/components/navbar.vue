@@ -77,7 +77,7 @@ export default {
     left: 0;
     width: 100vw;
     padding: 1rem;
-    background-color: transparent;
+    background-color: #1a1a1a; /* Changed to a darker background to match the website */
     color: white;
     z-index: 1000;
     box-sizing: border-box;
