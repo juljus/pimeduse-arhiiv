@@ -12,14 +12,14 @@ export default defineEventHandler(async (event) => {
     // Log the push event for debugging
     console.log('GitHub Push Event:', body);
 
-    // Execute the commands to pull the latest changes and rebuild the site
-    exec('git pull && npm install && npm run build', { cwd: process.cwd() }, (error, stdout, stderr) => {
+    // Execute the commands to pull the latest changes, install dependencies, build the site, and restart PM2
+    exec('git pull && npm install && npm run build && pm2 restart pimeduse-arhiiv', { cwd: process.cwd() }, (error, stdout, stderr) => {
         if (error) {
             console.error('Error executing commands:', error);
             return;
         }
-        console.log('Git Pull Output:', stdout);
-        console.error('Git Pull Errors:', stderr);
+        console.log('Git Pull and Build Output:', stdout);
+        console.error('Git Pull and Build Errors:', stderr);
     });
 
     return { status: 'success', message: 'Site updated successfully' };
