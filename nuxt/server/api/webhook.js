@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
         console.error('Git Pull and Build Errors:', stderr);
 
         // Restart PM2 process only after the build is complete
-        exec('pm2 restart pimeduse-arhiiv', (pm2Error, pm2Stdout, pm2Stderr) => {
+        exec('pm2 restart pimeduse-arhiiv', { cwd: process.cwd() }, (pm2Error, pm2Stdout, pm2Stderr) => {
             if (pm2Error) {
                 console.error('Error restarting PM2 process:', pm2Error);
                 return;
