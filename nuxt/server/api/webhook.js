@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
         // Restart PM2 process only after the build is complete
         exec('pm2 restart pimeduse-arhiiv', {
             cwd: '/Users/juljus/Documents/GitHub/pimeduse-arhiiv/nuxt',
-            shell: '/bin/bash',
+            shell: '/usr/bin/bash',
             env: { ...process.env, PATH: '/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin' }
         }, (pm2Error, pm2Stdout, pm2Stderr) => {
             if (pm2Error) {
