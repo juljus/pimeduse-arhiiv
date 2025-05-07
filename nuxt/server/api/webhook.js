@@ -33,9 +33,11 @@ export default defineEventHandler(async (event) => {
   }
 
   if (githubEvent === 'push') {
-    const scriptPath = path.resolve(process.cwd(), 'server/api/deploy.sh');
+    // Use an absolute path to the deploy script on your server
+    // IMPORTANT: Adjust this path if your project is located elsewhere on your server.
+    const scriptPath = '/home/juljus/pimeduse-arhiiv/nuxt/server/api/deploy.sh';
     
-    console.log(`Executing deploy script (no secret verification): ${scriptPath}`);
+    console.log(`Executing deploy script (no secret verification, absolute path): ${scriptPath}`);
 
     exec(`sh ${scriptPath}`, (error, stdout, stderr) => {
       if (error) {
