@@ -1,94 +1,56 @@
-import { promisify } from 'util';
-import { exec as execCallback } from 'child_process';
-import fs from 'fs';
+import { defineEventHandler, readBody } from 'h3';
+import { exec } from 'child_process';
+// import crypto from 'crypto'; // No longer needed for basic version
+import path from 'path';
 
-// Convert callback-based exec to Promise-based
-const exec = promisify(execCallback);
-const writeFile = promisify(fs.writeFile);
+// IMPORTANT: GitHub secret verification has been removed for now.
+// const GITHUB_WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET; // Removed
 
 export default defineEventHandler(async (event) => {
-  try {
-    // Parse the incoming webhook payload
-    const body = await readBody(event);
-    
-    // Verify the event is a push event
-    if (event.node.req.headers['x-github-event'] !== 'push') {
-      return { status: 'ignored', message: 'Not a push event' };
-    }
-    
-    // Log the push event for debugging
-    console.log('GitHub Push Event received:', new Date().toISOString());
-    console.log('Event details:', body.repository?.full_name, 'ref:', body.ref);
-    
-    // Create a deployment script in a location that's guaranteed to be accessible
-    const homeDir = '/home/juljus';
-    const deployScript = `${homeDir}/deploy_pimeduse.sh`;
-    
-    // Script content with full paths and environment setup
-    const scriptContent = `#!/bin/bash
-# Auto-generated deployment script
-echo "=== Starting deployment at $(date) ==="
-echo "Running as user: $(whoami)"
-
-# Source NVM to get access to npm
-source ${homeDir}/.nvm/nvm.sh
-
-# Project configuration
-PROJECT_PATH="${homeDir}/pimeduse-arhiiv/nuxt"
-BRANCH="main"
-PM2_APP_NAME="pimeduse-arhiiv"
-
-# Change to project directory
-echo "Changing to project directory: $PROJECT_PATH"
-cd $PROJECT_PATH || { echo "Failed to change directory"; exit 1; }
-
-# Pull latest changes
-echo "Pulling latest changes from GitHub..."
-git pull origin $BRANCH
-
-# Install dependencies
-echo "Installing dependencies..."
-npm install
-
-# Build the application
-echo "Building the Nuxt application..."
-npm run build
-
-# Restart PM2 process
-echo "Restarting PM2 process..."
-pm2 restart $PM2_APP_NAME
-
-echo "Deployment completed successfully at $(date)!"
-exit 0
-`;
-    
-    console.log('Writing deployment script to:', deployScript);
-    
-    // Write the script to the file system
-    await writeFile(deployScript, scriptContent, {mode: 0o755});
-    
-    console.log('Executing deployment script');
-    
-    // Run the script in a login shell
-    const { stdout, stderr } = await exec(`bash -l ${deployScript}`, {
-      maxBuffer: 1024 * 1024 // 1MB buffer for larger outputs
-    });
-    
-    console.log('Deployment output:', stdout);
-    if (stderr && stderr.trim()) console.error('Deployment errors:', stderr);
-    
-    return { 
-      status: 'success', 
-      message: 'Site updated successfully',
-      timestamp: new Date().toISOString()
-    };
-    
-  } catch (error) {
-    console.error('Deployment failed:', error);
-    return { 
-      status: 'error', 
-      message: `Deployment failed: ${error.message}`,
-      timestamp: new Date().toISOString()
-    };
+  if (event.node.req.method !== 'POST') {
+    event.node.res.statusCode = 405;
+    return { error: 'Method Not Allowed' };
   }
+
+  // const signature = event.node.req.headers['x-hub-signature-256']; // Removed
+  // const body = await readBody(event); // Body might still be needed if you want to inspect payload for specific branches, etc.
+                                      // For now, just reading it to be consistent with original structure if body parsing is expected by h3 or the event.
+  await readBody(event);
+
+
+  // Secret verification block removed
+  // if (!GITHUB_WEBHOOK_SECRET) { ... } // Removed
+  // if (!signature) { ... } // Removed
+  // const hmac = crypto.createHmac(...) // Removed
+  // const digest = Buffer.from(...) // Removed
+  // const receivedSignature = Buffer.from(...) // Removed
+  // if (!crypto.timingSafeEqual(...)) { ... } // Removed
+
+  const githubEvent = event.node.req.headers['x-github-event'];
+
+  if (githubEvent === 'ping') {
+    return { message: 'Webhook configured successfully (ping received). No secret verification.' };
+  }
+
+  if (githubEvent === 'push') {
+    const scriptPath = path.resolve(process.cwd(), 'server/api/deploy.sh');
+    
+    console.log(`Executing deploy script (no secret verification): ${scriptPath}`);
+
+    exec(`sh ${scriptPath}`, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error executing deploy script: ${error.message}`);
+        return;
+      }
+      if (stderr) {
+        console.warn(`Deploy script STDERR: ${stderr}`);
+      }
+      console.log(`Deploy script STDOUT: ${stdout}`);
+    });
+
+    return { message: 'Webhook received. Deployment process initiated (no secret verification).' };
+  }
+
+  event.node.res.statusCode = 400;
+  return { error: 'Unhandled GitHub event type.' };
 });
