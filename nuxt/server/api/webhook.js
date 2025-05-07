@@ -13,7 +13,11 @@ export default defineEventHandler(async (event) => {
     console.log('GitHub Push Event:', body);
 
     // Execute the commands to pull the latest changes, install dependencies, build the site, and restart PM2
-    exec('git pull origin main && npm install && npm run build && pm2 restart pimeduse-arhiiv', { cwd: process.cwd() }, (error, stdout, stderr) => {
+    exec('git pull origin main && npm install && npm run build && pm2 restart pimeduse-arhiiv', {
+        cwd: '/Users/juljus/Documents/GitHub/pimeduse-arhiiv/nuxt',
+        shell: '/bin/bash',
+        env: { ...process.env, PATH: '/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin' }
+    }, (error, stdout, stderr) => {
         if (error) {
             console.error('Error executing commands:', error);
             return;
