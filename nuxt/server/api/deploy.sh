@@ -1,11 +1,14 @@
 #!/bin/bash
 
-# Navigate to the project directory (adjust if your script is not in nuxt/server/api/)
-# This assumes the script is run from the nuxt/server/api directory.
-# And the project root is two levels up.
+# Navigate to the project directory using BASH_SOURCE
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && cd ../.. && pwd)"
 
-cd "$PROJECT_DIR" || exit
+cd "$PROJECT_DIR" || {
+  echo "Error: Could not change to project directory $PROJECT_DIR"
+  exit 1
+}
+
+echo "Changed to project directory: $(pwd)"
 
 # Exit immediately if a command exits with a non-zero status.
 set -e
