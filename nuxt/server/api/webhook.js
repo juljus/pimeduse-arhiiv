@@ -23,6 +23,18 @@ export default defineEventHandler(async (event) => {
     console.log('GitHub Push Event received:', new Date().toISOString());
     console.log('Event details:', body.repository?.full_name, 'ref:', body.ref);
     
+    // Path to the diagnostic script
+    const diagnosticPath = path.join(__dirname, 'diagnostic.sh');
+    
+    // Make sure the diagnostic script is executable
+    await exec(`chmod +x ${diagnosticPath}`);
+    
+    // Run the diagnostic script first
+    console.log('Running diagnostic script to collect environment information...');
+    await exec(`bash -l ${diagnosticPath}`).catch(e => {
+      console.error('Error running diagnostic script:', e.message);
+    });
+    
     // Path to the update script
     const scriptPath = path.join(__dirname, 'updateCommand.sh');
     
