@@ -4,14 +4,19 @@ import { exec as execCallback } from 'child_process';
 // Convert callback-based exec to Promise-based
 const exec = promisify(execCallback);
 
-// Configuration - adjust these for your Debian server
+// Configuration with specific paths from your Debian server
 const CONFIG = {
-  // This path should be the correct path on your Debian server
-  projectPath: process.env.PROJECT_PATH || '/home/juljus/pimeduse-arhiiv/nuxt',
+  // Project path
+  projectPath: '/home/juljus/pimeduse-arhiiv/nuxt',
   // The branch to pull from
-  branch: process.env.GIT_BRANCH || 'main',
+  branch: 'main',
   // PM2 app name
-  pm2AppName: process.env.PM2_APP_NAME || 'pimeduse-arhiiv'
+  pm2AppName: 'pimeduse-arhiiv',
+  // Full paths to executables from your system
+  nodePath: '/home/juljus/.nvm/versions/node/v22.15.0/bin/node',
+  npmPath: '/home/juljus/.nvm/versions/node/v22.15.0/bin/npm',
+  // Path to NVM script to ensure environment is properly set up
+  nvmPath: '/home/juljus/.nvm/nvm.sh'
 };
 
 export default defineEventHandler(async (event) => {
@@ -28,27 +33,31 @@ export default defineEventHandler(async (event) => {
     console.log('GitHub Push Event received:', new Date().toISOString());
     console.log('Event details:', body.repository?.full_name, 'ref:', body.ref);
     
-    // Execute the commands to pull the latest changes, install dependencies, build the site, and restart PM2
-    const updateCommand = `cd ${CONFIG.projectPath} && ` +
+    // Execute the commands with full paths to npm and node
+    // We're also sourcing NVM to ensure the environment is properly set up
+    const updateCommand = `source ${CONFIG.nvmPath} && ` +
+                          `cd ${CONFIG.projectPath} && ` +
                           `git pull origin ${CONFIG.branch} && ` +
-                          `npm install && ` +
-                          `npm run build && ` +
+                          `${CONFIG.npmPath} install && ` +
+                          `${CONFIG.npmPath} run build && ` +
                           `pm2 restart ${CONFIG.pm2AppName}`;
     
     console.log('Starting deployment process...');
+    console.log('Command to execute:', updateCommand);
     
     // Run the commands and wait for completion
     const { stdout, stderr } = await exec(updateCommand, {
       shell: '/bin/bash',
       env: { 
-        ...process.env, 
-        PATH: '/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/nodejs/bin'
+        ...process.env,
+        // Add Node.js directory to PATH
+        PATH: `${process.env.PATH}:/home/juljus/.nvm/versions/node/v22.15.0/bin:/usr/local/bin:/usr/bin:/bin`
       },
       maxBuffer: 1024 * 1024 // 1MB buffer for larger outputs
     });
     
     console.log('Deployment output:', stdout);
-    if (stderr) console.error('Deployment errors:', stderr);
+    if (stderr && stderr.trim()) console.error('Deployment errors:', stderr);
     
     return { 
       status: 'success', 
