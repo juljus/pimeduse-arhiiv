@@ -1,11 +1,10 @@
 import { promisify } from 'util';
 import { exec as execCallback } from 'child_process';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import fs from 'fs';
 
 // Convert callback-based exec to Promise-based
 const exec = promisify(execCallback);
+const writeFile = promisify(fs.writeFile);
 
 export default defineEventHandler(async (event) => {
   try {
@@ -21,36 +20,57 @@ export default defineEventHandler(async (event) => {
     console.log('GitHub Push Event received:', new Date().toISOString());
     console.log('Event details:', body.repository?.full_name, 'ref:', body.ref);
     
-    // Hard-coded path to the update script on the server
-    // This is the path to the script in your source repository, not in the build output
-    const scriptPath = '/home/juljus/pimeduse-arhiiv/nuxt/server/api/updateCommand.sh';
+    // Create a deployment script in a location that's guaranteed to be accessible
+    const homeDir = '/home/juljus';
+    const deployScript = `${homeDir}/deploy_pimeduse.sh`;
     
-    console.log('Checking if script exists at:', scriptPath);
+    // Script content with full paths and environment setup
+    const scriptContent = `#!/bin/bash
+# Auto-generated deployment script
+echo "=== Starting deployment at $(date) ==="
+echo "Running as user: $(whoami)"
+
+# Source NVM to get access to npm
+source ${homeDir}/.nvm/nvm.sh
+
+# Project configuration
+PROJECT_PATH="${homeDir}/pimeduse-arhiiv/nuxt"
+BRANCH="main"
+PM2_APP_NAME="pimeduse-arhiiv"
+
+# Change to project directory
+echo "Changing to project directory: $PROJECT_PATH"
+cd $PROJECT_PATH || { echo "Failed to change directory"; exit 1; }
+
+# Pull latest changes
+echo "Pulling latest changes from GitHub..."
+git pull origin $BRANCH
+
+# Install dependencies
+echo "Installing dependencies..."
+npm install
+
+# Build the application
+echo "Building the Nuxt application..."
+npm run build
+
+# Restart PM2 process
+echo "Restarting PM2 process..."
+pm2 restart $PM2_APP_NAME
+
+echo "Deployment completed successfully at $(date)!"
+exit 0
+`;
     
-    // Check if the file exists before attempting to execute it
-    try {
-      await promisify(fs.access)(scriptPath, fs.constants.F_OK);
-      console.log('Script file found, proceeding with execution');
-    } catch (e) {
-      console.error('Script file not found at path:', scriptPath);
-      console.log('Current working directory:', process.cwd());
-      console.log('Attempting to list directory contents...');
-      try {
-        const { stdout: lsOutput } = await exec('ls -la /home/juljus/pimeduse-arhiiv/nuxt/server/api/');
-        console.log('Directory contents:', lsOutput);
-      } catch (lsError) {
-        console.error('Error listing directory:', lsError.message);
-      }
-      throw new Error(`Script file not found: ${scriptPath}`);
-    }
+    console.log('Writing deployment script to:', deployScript);
     
-    console.log('Making script executable...');
-    await exec(`chmod +x ${scriptPath}`);
+    // Write the script to the file system
+    await writeFile(deployScript, scriptContent, {mode: 0o755});
     
-    console.log('Executing deployment script at:', scriptPath);
+    console.log('Executing deployment script');
     
-    // Run the script in a bash login shell to ensure all environment variables are loaded
-    const { stdout, stderr } = await exec(`bash -l ${scriptPath}`, {
+    // Run the script in a login shell
+    const { stdout, stderr } = await exec(`bash -l ${deployScript}`, {
       maxBuffer: 1024 * 1024 // 1MB buffer for larger outputs
     });
     
