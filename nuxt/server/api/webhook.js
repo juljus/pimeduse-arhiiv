@@ -2,12 +2,10 @@ import { promisify } from 'util';
 import { exec as execCallback } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 // Convert callback-based exec to Promise-based
 const exec = promisify(execCallback);
-
-// Get the directory of the current file
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineEventHandler(async (event) => {
   try {
@@ -23,25 +21,33 @@ export default defineEventHandler(async (event) => {
     console.log('GitHub Push Event received:', new Date().toISOString());
     console.log('Event details:', body.repository?.full_name, 'ref:', body.ref);
     
-    // Path to the diagnostic script
-    const diagnosticPath = path.join(__dirname, 'diagnostic.sh');
+    // Hard-coded path to the update script on the server
+    // This is the path to the script in your source repository, not in the build output
+    const scriptPath = '/home/juljus/pimeduse-arhiiv/nuxt/server/api/updateCommand.sh';
     
-    // Make sure the diagnostic script is executable
-    await exec(`chmod +x ${diagnosticPath}`);
+    console.log('Checking if script exists at:', scriptPath);
     
-    // Run the diagnostic script first
-    console.log('Running diagnostic script to collect environment information...');
-    await exec(`bash -l ${diagnosticPath}`).catch(e => {
-      console.error('Error running diagnostic script:', e.message);
-    });
+    // Check if the file exists before attempting to execute it
+    try {
+      await promisify(fs.access)(scriptPath, fs.constants.F_OK);
+      console.log('Script file found, proceeding with execution');
+    } catch (e) {
+      console.error('Script file not found at path:', scriptPath);
+      console.log('Current working directory:', process.cwd());
+      console.log('Attempting to list directory contents...');
+      try {
+        const { stdout: lsOutput } = await exec('ls -la /home/juljus/pimeduse-arhiiv/nuxt/server/api/');
+        console.log('Directory contents:', lsOutput);
+      } catch (lsError) {
+        console.error('Error listing directory:', lsError.message);
+      }
+      throw new Error(`Script file not found: ${scriptPath}`);
+    }
     
-    // Path to the update script
-    const scriptPath = path.join(__dirname, 'updateCommand.sh');
+    console.log('Making script executable...');
+    await exec(`chmod +x ${scriptPath}`);
     
     console.log('Executing deployment script at:', scriptPath);
-    
-    // Make sure the script is executable
-    await exec(`chmod +x ${scriptPath}`);
     
     // Run the script in a bash login shell to ensure all environment variables are loaded
     const { stdout, stderr } = await exec(`bash -l ${scriptPath}`, {
