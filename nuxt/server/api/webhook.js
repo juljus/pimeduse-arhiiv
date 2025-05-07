@@ -1,23 +1,13 @@
 import { promisify } from 'util';
 import { exec as execCallback } from 'child_process';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 // Convert callback-based exec to Promise-based
 const exec = promisify(execCallback);
 
-// Configuration with specific paths from your Debian server
-const CONFIG = {
-  // Project path
-  projectPath: '/home/juljus/pimeduse-arhiiv/nuxt',
-  // The branch to pull from
-  branch: 'main',
-  // PM2 app name
-  pm2AppName: 'pimeduse-arhiiv',
-  // Full paths to executables from your system
-  nodePath: '/home/juljus/.nvm/versions/node/v22.15.0/bin/node',
-  npmPath: '/home/juljus/.nvm/versions/node/v22.15.0/bin/npm',
-  // Path to NVM script to ensure environment is properly set up
-  nvmPath: '/home/juljus/.nvm/nvm.sh'
-};
+// Get the directory of the current file
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineEventHandler(async (event) => {
   try {
@@ -33,26 +23,16 @@ export default defineEventHandler(async (event) => {
     console.log('GitHub Push Event received:', new Date().toISOString());
     console.log('Event details:', body.repository?.full_name, 'ref:', body.ref);
     
-    // Execute the commands with full paths to npm and node
-    // We're also sourcing NVM to ensure the environment is properly set up
-    const updateCommand = `source ${CONFIG.nvmPath} && ` +
-                          `cd ${CONFIG.projectPath} && ` +
-                          `git pull origin ${CONFIG.branch} && ` +
-                          `${CONFIG.npmPath} install && ` +
-                          `${CONFIG.npmPath} run build && ` +
-                          `pm2 restart ${CONFIG.pm2AppName}`;
+    // Path to the update script
+    const scriptPath = path.join(__dirname, 'updateCommand.sh');
     
-    console.log('Starting deployment process...');
-    console.log('Command to execute:', updateCommand);
+    console.log('Executing deployment script at:', scriptPath);
     
-    // Run the commands and wait for completion
-    const { stdout, stderr } = await exec(updateCommand, {
-      shell: '/bin/bash',
-      env: { 
-        ...process.env,
-        // Add Node.js directory to PATH
-        PATH: `${process.env.PATH}:/home/juljus/.nvm/versions/node/v22.15.0/bin:/usr/local/bin:/usr/bin:/bin`
-      },
+    // Make sure the script is executable
+    await exec(`chmod +x ${scriptPath}`);
+    
+    // Run the script in a bash login shell to ensure all environment variables are loaded
+    const { stdout, stderr } = await exec(`bash -l ${scriptPath}`, {
       maxBuffer: 1024 * 1024 // 1MB buffer for larger outputs
     });
     
