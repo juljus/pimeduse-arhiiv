@@ -1,10 +1,10 @@
 import { defineEventHandler, readBody } from 'h3';
 import { exec } from 'child_process';
-// import crypto from 'crypto'; // No longer needed for basic version
+import crypto from 'crypto'; // Import crypto for hashing
 import path from 'path';
 
-// IMPORTANT: GitHub secret verification has been removed for now.
-// const GITHUB_WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET; // Removed
+// IMPORTANT: Set this environment variable on your server
+const GITHUB_WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET;
 
 export default defineEventHandler(async (event) => {
   if (event.node.req.method !== 'POST') {
@@ -12,32 +12,47 @@ export default defineEventHandler(async (event) => {
     return { error: 'Method Not Allowed' };
   }
 
-  // const signature = event.node.req.headers['x-hub-signature-256']; // Removed
-  // const body = await readBody(event); // Body might still be needed if you want to inspect payload for specific branches, etc.
-                                      // For now, just reading it to be consistent with original structure if body parsing is expected by h3 or the event.
-  await readBody(event);
+  const signature = event.node.req.headers['x-hub-signature-256'];
+  // It's important to read the raw body as a Buffer for accurate hash calculation,
+  // but h3's readBody parses it. We'll stringify it back for the HMAC calculation.
+  // For more robust handling, especially with different charsets, using a middleware
+  // that provides the raw buffer before h3 parses it would be ideal, but this is a common approach.
+  const body = await readBody(event);
+  const bodyString = JSON.stringify(body); // GitHub sends JSON payload
 
+  if (!GITHUB_WEBHOOK_SECRET) {
+    console.error('CRITICAL: GITHUB_WEBHOOK_SECRET is not set on the server.');
+    event.node.res.statusCode = 500;
+    return { error: 'Server configuration error: Webhook secret not set.' };
+  }
 
-  // Secret verification block removed
-  // if (!GITHUB_WEBHOOK_SECRET) { ... } // Removed
-  // if (!signature) { ... } // Removed
-  // const hmac = crypto.createHmac(...) // Removed
-  // const digest = Buffer.from(...) // Removed
-  // const receivedSignature = Buffer.from(...) // Removed
-  // if (!crypto.timingSafeEqual(...)) { ... } // Removed
+  if (!signature) {
+    console.warn('Webhook request received without a signature.');
+    event.node.res.statusCode = 401;
+    return { error: 'No signature provided. Ensure webhook is configured with a secret.' };
+  }
 
+  const hmac = crypto.createHmac('sha256', GITHUB_WEBHOOK_SECRET);
+  const digest = Buffer.from('sha256=' + hmac.update(bodyString).digest('hex'), 'utf8');
+  const receivedSignature = Buffer.from(signature, 'utf8');
+
+  if (!crypto.timingSafeEqual(digest, receivedSignature)) {
+    console.warn('Invalid webhook signature received.');
+    event.node.res.statusCode = 401;
+    return { error: 'Invalid signature.' };
+  }
+
+  // GitHub event type, e.g., 'push'
   const githubEvent = event.node.req.headers['x-github-event'];
 
   if (githubEvent === 'ping') {
-    return { message: 'Webhook configured successfully (ping received). No secret verification.' };
+    return { message: 'Webhook configured successfully (ping received, signature verified).' };
   }
 
   if (githubEvent === 'push') {
-    // Use an absolute path to the deploy script on your server
-    // IMPORTANT: Adjust this path if your project is located elsewhere on your server.
     const scriptPath = '/home/juljus/pimeduse-arhiiv/nuxt/server/api/deploy.sh';
     
-    console.log(`Executing deploy script with bash (no secret verification, absolute path): ${scriptPath}`);
+    console.log(`Executing deploy script (signature verified, absolute path): ${scriptPath}`);
 
     exec(`bash ${scriptPath}`, (error, stdout, stderr) => {
       if (error) {
@@ -50,7 +65,7 @@ export default defineEventHandler(async (event) => {
       console.log(`Deploy script STDOUT: ${stdout}`);
     });
 
-    return { message: 'Webhook received. Deployment process initiated (no secret verification).' };
+    return { message: 'Webhook received and verified. Deployment process initiated.' };
   }
 
   event.node.res.statusCode = 400;
