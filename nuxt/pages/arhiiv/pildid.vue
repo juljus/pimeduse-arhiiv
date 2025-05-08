@@ -34,7 +34,16 @@
                 
                 <!-- Image -->
                 <div class="modal-image-container">
-                    <NuxtImg :src="currentImage" class="modal-image" alt="Preview" @click.stop provider="ipx" sizes="sm:100vw md:80vw lg:95vw" />
+                    <NuxtImg 
+                        :key="currentImage" 
+                        :src="currentImage" 
+                        :placeholder="[currentImage, { width: 100, quality: 40, fit: 'contain' }]"
+                        class="modal-image" 
+                        alt="Preview" 
+                        @click.stop 
+                        provider="ipx" 
+                        sizes="sm:100vw md:80vw lg:95vw" 
+                    />
                     <!-- Image name display -->
                     <div class="image-name">{{ currentImageName }}</div>
                 </div>
@@ -63,25 +72,43 @@ const currentImage = ref('');
 const currentIndex = ref(0);
 const currentImageName = ref('');
 
+// Preload an image
+function preloadImage(src) {
+  if (!src || typeof window === 'undefined') return; // Ensure src exists and window is defined
+  const img = new Image();
+  img.src = src;
+}
+
 // Open preview modal
 function openPreview(image) {
     console.log('Opening preview for:', image);
     currentImage.value = image;
     currentIndex.value = images.value.indexOf(image);
     
-    // Extract the filename from the path and remove extension
     const filename = image.split('/').pop();
     currentImageName.value = filename.replace(/\.[^/.]+$/, '');
     
     previewOpen.value = true;
-    document.body.style.overflow = 'hidden';
+    if (typeof document !== 'undefined') {
+        document.body.style.overflow = 'hidden';
+    }
+
+    // Preload next and previous images
+    if (currentIndex.value > 0) {
+        preloadImage(images.value[currentIndex.value - 1]);
+    }
+    if (currentIndex.value < images.value.length - 1) {
+        preloadImage(images.value[currentIndex.value + 1]);
+    }
 }
 
 // Close preview modal
 function closePreview() {
     console.log('Closing preview');
     previewOpen.value = false;
-    document.body.style.overflow = '';
+    if (typeof document !== 'undefined') {
+        document.body.style.overflow = '';
+    }
 }
 
 // Navigate to the previous image
@@ -89,8 +116,11 @@ function navigateToPrevious() {
     if (currentIndex.value > 0) {
         currentIndex.value--;
         currentImage.value = images.value[currentIndex.value];
-        // Update the image name when navigating and remove extension
         currentImageName.value = currentImage.value.split('/').pop().replace(/\.[^/.]+$/, '');
+        // Preload the new previous image (if any)
+        if (currentIndex.value > 0) {
+            preloadImage(images.value[currentIndex.value - 1]);
+        }
     }
 }
 
@@ -99,8 +129,11 @@ function navigateToNext() {
     if (currentIndex.value < images.value.length - 1) {
         currentIndex.value++;
         currentImage.value = images.value[currentIndex.value];
-        // Update the image name when navigating and remove extension
         currentImageName.value = currentImage.value.split('/').pop().replace(/\.[^/.]+$/, '');
+        // Preload the new next image (if any)
+        if (currentIndex.value < images.value.length - 1) {
+            preloadImage(images.value[currentIndex.value + 1]);
+        }
     }
 }
 
@@ -148,6 +181,9 @@ onMounted(() => {
                     })
                     .map(file => `/pildid/${file}`);
                 console.log('images: ', images.value);
+                // Optional: Preload first few images for the modal if desired
+                // if (images.value.length > 0) preloadImage(images.value[0]);
+                // if (images.value.length > 1) preloadImage(images.value[1]);
             } else {
                 errorMessage.value = 'No files found';
             }
@@ -156,13 +192,19 @@ onMounted(() => {
             errorMessage.value = 'Error fetching files';
         });
     
-    window.addEventListener('keydown', handleKeyDown);
+    if (typeof window !== 'undefined') {
+        window.addEventListener('keydown', handleKeyDown);
+    }
 });
 
 // Clean up event listener when component unmounts
 onBeforeUnmount(() => {
-    window.removeEventListener('keydown', handleKeyDown);
-    document.body.style.overflow = ''; // Reset body overflow
+    if (typeof window !== 'undefined') {
+        window.removeEventListener('keydown', handleKeyDown);
+    }
+    if (typeof document !== 'undefined') {
+        document.body.style.overflow = ''; // Reset body overflow
+    }
 });
 </script>
 
