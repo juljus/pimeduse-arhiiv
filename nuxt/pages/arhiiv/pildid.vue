@@ -7,7 +7,7 @@
             <div v-for="(image, index) in images" :key="index" 
                 class="image-container cursor-pointer hover:opacity-80 transition-all duration-300"
                 @click="openPreview(image)">
-                <img :src="image" :alt="`Pilt ${index + 1}`" class="w-full h-full object-cover rounded-md">
+                <NuxtImg :src="image" :alt="`Pilt ${index + 1}`" class="w-full h-full object-cover rounded-md" provider="ipx" sizes="sm:100vw md:50vw lg:200px" />
             </div>
         </div>
         
@@ -34,7 +34,7 @@
                 
                 <!-- Image -->
                 <div class="modal-image-container">
-                    <img :src="currentImage" class="modal-image" alt="Preview" @click.stop>
+                    <NuxtImg :src="currentImage" class="modal-image" alt="Preview" @click.stop provider="ipx" sizes="sm:100vw md:80vw lg:95vw" />
                     <!-- Image name display -->
                     <div class="image-name">{{ currentImageName }}</div>
                 </div>

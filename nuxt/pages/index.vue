@@ -2,14 +2,13 @@
     <div class="page-container">
         <!-- Animation as title/header -->
         <div class="animation-header">
-            <div v-if="animationLoading" class="loading"></div>
-            <div v-else-if="animationError" class="error"></div>
+            <div v-if="animationLoading" class="loading">Loading Animation...</div>
+            <div v-else-if="animationError" class="error">Error loading animation</div>
             <img 
                 v-else
                 :src="currentFrameSrc" 
                 alt="Animation frame"
                 class="animation-frame"
-                @load="frameLoaded"
             />
         </div>
         
@@ -51,9 +50,11 @@ const frames = ref([]);
 const currentFrameIndex = ref(0);
 const animationLoading = ref(true);
 const animationError = ref(null);
-const animationInterval = ref(null);
-const framesLoaded = ref(0);
+// const animationInterval = ref(null); // Replaced by requestAnimationFrame
+let animationFrameId = null; // For requestAnimationFrame
+const preloadedFrames = ref(0);
 const frameDuration = 62.5; // milliseconds between frames, adjust as needed
+let lastFrameTime = 0;
 
 // Text reveal variables
 const animationComplete = ref(false);
@@ -101,46 +102,48 @@ const processPageContent = () => {
 
 // Compute the current frame's source path
 const currentFrameSrc = computed(() => {
-    if (frames.value.length === 0) return '';
+    if (frames.value.length === 0 || currentFrameIndex.value >= frames.value.length) return '';
     return `/animation/${frames.value[currentFrameIndex.value]}`;
 });
 
-// Update frame index for animation
-function nextFrame() {
-    if (frames.value.length === 0) return;
-    
-    // Check if we're at the last frame
-    if (currentFrameIndex.value < frames.value.length - 1) {
-        // If not at the last frame, move to the next one
-        currentFrameIndex.value += 1;
-    } else {
-        // If at the last frame, stop the animation
-        if (animationInterval.value) {
-            clearInterval(animationInterval.value);
-            animationInterval.value = null;
-            
-            // Animation is complete, start revealing text
+// Animation loop using requestAnimationFrame
+function animationLoop(timestamp) {
+    if (!lastFrameTime) {
+        lastFrameTime = timestamp;
+    }
+
+    const elapsed = timestamp - lastFrameTime;
+
+    if (elapsed >= frameDuration) {
+        lastFrameTime = timestamp - (elapsed % frameDuration);
+        
+        if (currentFrameIndex.value < frames.value.length - 1) {
+            currentFrameIndex.value++;
+        } else {
             animationComplete.value = true;
             startTextReveal();
+            // No need to clear/stop loop here if it's a one-time animation
+            // If it were to loop, reset currentFrameIndex.value = 0;
+            return; // Stop the loop once animation is complete
         }
+    }
+
+    if (!animationComplete.value) {
+        animationFrameId = requestAnimationFrame(animationLoop);
     }
 }
 
 // Start the animation
 function startAnimation() {
-    if (animationInterval.value) clearInterval(animationInterval.value);
-    animationInterval.value = setInterval(nextFrame, frameDuration);
-}
-
-// Handle frame load events
-function frameLoaded() {
-    framesLoaded.value++;
-    
-    // When first frame is loaded, we can start showing the animation
-    if (framesLoaded.value === 1) {
-        animationLoading.value = false;
-        startAnimation();
+    // Ensure all frames are loaded before starting
+    if (preloadedFrames.value < frames.value.length) {
+        console.warn("Attempted to start animation before all frames were loaded.");
+        return;
     }
+    animationLoading.value = false;
+    currentFrameIndex.value = 0;
+    lastFrameTime = 0; // Reset lastFrameTime before starting
+    animationFrameId = requestAnimationFrame(animationLoop);
 }
 
 // Reveal text line by line
@@ -178,7 +181,7 @@ function startTextReveal() {
     }
 }
 
-// Fetch animation frames
+// Fetch animation frames and preload them
 onMounted(async () => {
     try {
         const response = await fetch('/api/animation');
@@ -191,30 +194,52 @@ onMounted(async () => {
         }
         
         if (data.files && data.files.length > 0) {
-            // Sort the frames if they're numbered
             frames.value = data.files.sort((a, b) => {
-                // Sort numerically if filenames contain numbers
                 const numA = parseInt(a.match(/\d+/)?.[0] || 0);
                 const numB = parseInt(b.match(/\d+/)?.[0] || 0);
                 return numA - numB;
             });
-            
-            // Preload the first frame (the rest will load as needed)
-            const preloadImage = new Image();
-            preloadImage.src = `/animation/${frames.value[0]}`;
-            preloadImage.onload = () => {
-                currentFrameIndex.value = 0;
-                frameLoaded();
-            };
-            preloadImage.onerror = () => {
-                animationError.value = "Failed to load animation frames";
+
+            if (frames.value.length === 0) {
+                animationError.value = "No valid animation frames found after sorting";
                 animationLoading.value = false;
-            };
+                return;
+            }
+
+            // Preload all frames
+            let loadedCount = 0;
+            frames.value.forEach(frameFile => {
+                const img = new Image();
+                img.src = `/animation/${frameFile}`;
+                img.onload = () => {
+                    loadedCount++;
+                    preloadedFrames.value = loadedCount;
+                    if (loadedCount === frames.value.length) {
+                        // All frames are preloaded, start the animation
+                        startAnimation();
+                    }
+                };
+                img.onerror = () => {
+                    loadedCount++; // Count errors as "loaded" to not stall indefinitely
+                    preloadedFrames.value = loadedCount;
+                    console.error(`Failed to load animation frame: ${frameFile}`);
+                    // Potentially set animationError here or handle partial animation
+                    if (loadedCount === frames.value.length) {
+                         // If all (including errored ones) are processed
+                        if (preloadedFrames.value > 0 && !animationError.value) startAnimation();
+                        else if (!animationError.value) {
+                            animationError.value = "Failed to load some animation frames";
+                            animationLoading.value = false;
+                        }
+                    }
+                };
+            });
         } else {
             animationError.value = "No animation frames found";
             animationLoading.value = false;
         }
     } catch (error) {
+        console.error("Error fetching or preloading animation:", error);
         animationError.value = "Error loading animation";
         animationLoading.value = false;
     }
@@ -222,8 +247,11 @@ onMounted(async () => {
 
 // Clean up on component unmount
 onUnmounted(() => {
-    if (animationInterval.value) {
-        clearInterval(animationInterval.value);
+    // if (animationInterval.value) {
+    //     clearInterval(animationInterval.value);
+    // }
+    if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
     }
     if (lineRevealInterval.value) {
         clearInterval(lineRevealInterval.value);
@@ -315,13 +343,15 @@ onUnmounted(() => {
     padding-left: 1.5rem;
 }
 
-.loading, .error {
-    display: none; /* Hide loading completely */
+.loading {
+    /* display: none; */ /* Hide loading completely */
+    color: white; /* Make loading text visible */
+    font-style: italic;
 }
 
 .error {
     color: #ff5555;
-    display: none; /* Hide error messages too */
+    /* display: none; */ /* Hide error messages too */
 }
 
 /* Remove these CSS rules - no spinner */
