@@ -37,7 +37,7 @@
                     <NuxtImg 
                         :key="currentImage" 
                         :src="currentImage" 
-                        :placeholder="[currentImage, { width: 160, fit: 'cover', quality: 15 }]"
+                        :placeholder="80"
                         class="modal-image" 
                         alt="Preview" 
                         @click.stop 
