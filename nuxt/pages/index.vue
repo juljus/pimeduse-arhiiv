@@ -2,8 +2,8 @@
     <div class="page-container">
         <!-- Animation as title/header -->
         <div class="animation-header">
-            <div v-if="animationLoading" class="loading">Loading Animation...</div>
-            <div v-else-if="animationError" class="error">Error loading animation</div>
+            <div v-if="animationLoading" class="loading"></div>
+            <div v-else-if="animationError" class="error"></div>
             <img 
                 v-else
                 :src="currentFrameSrc" 
