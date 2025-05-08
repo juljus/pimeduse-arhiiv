@@ -37,7 +37,7 @@
                     <NuxtImg 
                         :key="currentImage" 
                         :src="currentImage" 
-                        :placeholder="[currentImage, { width: 100, quality: 40, fit: 'contain' }]"
+                        :placeholder="[currentImage, { width: 160, fit: 'cover', quality: 15 }]"
                         class="modal-image" 
                         alt="Preview" 
                         @click.stop 
@@ -93,13 +93,8 @@ function openPreview(image) {
         document.body.style.overflow = 'hidden';
     }
 
-    // Preload next and previous images
-    if (currentIndex.value > 0) {
-        preloadImage(images.value[currentIndex.value - 1]);
-    }
-    if (currentIndex.value < images.value.length - 1) {
-        preloadImage(images.value[currentIndex.value + 1]);
-    }
+    // Preload next/previous images
+    preloadAdjacentImages(currentIndex.value);
 }
 
 // Close preview modal
@@ -117,10 +112,7 @@ function navigateToPrevious() {
         currentIndex.value--;
         currentImage.value = images.value[currentIndex.value];
         currentImageName.value = currentImage.value.split('/').pop().replace(/\.[^/.]+$/, '');
-        // Preload the new previous image (if any)
-        if (currentIndex.value > 0) {
-            preloadImage(images.value[currentIndex.value - 1]);
-        }
+        preloadAdjacentImages(currentIndex.value);
     }
 }
 
@@ -130,10 +122,27 @@ function navigateToNext() {
         currentIndex.value++;
         currentImage.value = images.value[currentIndex.value];
         currentImageName.value = currentImage.value.split('/').pop().replace(/\.[^/.]+$/, '');
-        // Preload the new next image (if any)
-        if (currentIndex.value < images.value.length - 1) {
-            preloadImage(images.value[currentIndex.value + 1]);
-        }
+        preloadAdjacentImages(currentIndex.value);
+    }
+}
+
+// Preload adjacent images (next 2, previous 2)
+function preloadAdjacentImages(index) {
+    // Preload next image
+    if (index < images.value.length - 1) {
+        preloadImage(images.value[index + 1]);
+    }
+    // Preload next+1 image
+    if (index < images.value.length - 2) {
+        preloadImage(images.value[index + 2]);
+    }
+    // Preload previous image
+    if (index > 0) {
+        preloadImage(images.value[index - 1]);
+    }
+    // Preload previous-1 image
+    if (index > 1) {
+        preloadImage(images.value[index - 2]);
     }
 }
 
