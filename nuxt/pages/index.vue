@@ -18,24 +18,11 @@
             <div v-else-if="error" class="error"></div>
             <template v-else-if="page">
                 <div class="markdown-content">
-                    <!-- Use v-html directly on the ContentRenderer component -->
                     <ContentRenderer 
-                        v-if="!showLineByLine"
                         :value="page" 
                         class="content-fade-in" 
                         :class="{ 'visible': animationComplete }"
                     />
-                    <template v-else>
-                        <!-- Only use line-by-line approach if contentLines has items -->
-                        <div 
-                            v-for="(line, index) in contentLines" 
-                            :key="index"
-                            class="content-line"
-                            :class="{ 'visible': visibleLines > index }"
-                        >
-                            <div v-html="line"></div>
-                        </div>
-                    </template>
                 </div>
             </template>
         </div>
@@ -50,55 +37,18 @@ const frames = ref([]);
 const currentFrameIndex = ref(0);
 const animationLoading = ref(true);
 const animationError = ref(null);
-// const animationInterval = ref(null); // Replaced by requestAnimationFrame
-let animationFrameId = null; // For requestAnimationFrame
+let animationFrameId = null; 
 const preloadedFrames = ref(0);
-const frameDuration = 62.5; // milliseconds between frames, adjust as needed
+const frameDuration = 62.5; 
 let lastFrameTime = 0;
 
-// Text reveal variables
+// Text reveal variable
 const animationComplete = ref(false);
-const contentLines = ref([]);
-const visibleLines = ref(0);
-const lineRevealInterval = ref(null);
-const lineRevealDelay = 100; // milliseconds between revealing lines
-const showLineByLine = ref(false); // Flag to toggle between approaches
 
 // Content variables using Nuxt Content
 const { data: page, pending, error } = await useAsyncData('index-page', () => {
     return queryCollection('main_page').first();
 });
-
-// Process page content into lines (client-side only)
-const processPageContent = () => {
-    if (!page.value || !process.client) return false;
-    
-    try {
-        // Use the HTML content from page
-        if (page.value.body && page.value.body.html) {
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = page.value.body.html;
-            
-            // Extract paragraphs, headings, and other block elements
-            const elements = tempDiv.querySelectorAll('p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, div');
-            if (elements.length > 0) {
-                contentLines.value = Array.from(elements).map(el => el.outerHTML);
-                console.log(`Processed ${contentLines.value.length} content lines`);
-                return true;
-            } else {
-                // If no elements were found, use the entire HTML content as a single line
-                contentLines.value = [page.value.body.html];
-                console.log("Using full HTML as a single line");
-                return true;
-            }
-        }
-    } catch (err) {
-        console.error("Error processing content:", err);
-        return false;
-    }
-    
-    return false;
-};
 
 // Compute the current frame's source path
 const currentFrameSrc = computed(() => {
@@ -120,11 +70,8 @@ function animationLoop(timestamp) {
         if (currentFrameIndex.value < frames.value.length - 1) {
             currentFrameIndex.value++;
         } else {
-            animationComplete.value = true;
-            startTextReveal();
-            // No need to clear/stop loop here if it's a one-time animation
-            // If it were to loop, reset currentFrameIndex.value = 0;
-            return; // Stop the loop once animation is complete
+            triggerContentFadeIn();
+            return; 
         }
     }
 
@@ -133,52 +80,22 @@ function animationLoop(timestamp) {
     }
 }
 
-// Start the animation
-function startAnimation() {
-    // Ensure all frames are loaded before starting
+// Start the image animation
+function startImageAnimation() {
     if (preloadedFrames.value < frames.value.length) {
         console.warn("Attempted to start animation before all frames were loaded.");
         return;
     }
     animationLoading.value = false;
     currentFrameIndex.value = 0;
-    lastFrameTime = 0; // Reset lastFrameTime before starting
+    lastFrameTime = 0; 
     animationFrameId = requestAnimationFrame(animationLoop);
 }
 
-// Reveal text line by line
-function startTextReveal() {
-    console.log('Starting text reveal');
-    
-    // First, try to process content lines if we want the line-by-line approach
-    const success = processPageContent();
-    showLineByLine.value = success && contentLines.value.length > 0;
-    
-    // If line-by-line approach is successful, use it
-    if (showLineByLine.value) {
-        visibleLines.value = 0;
-        if (lineRevealInterval.value) clearInterval(lineRevealInterval.value);
-        
-        // Ensure animation complete is set to true
-        animationComplete.value = true;
-        
-        setTimeout(() => {
-            console.log(`Beginning reveal of ${contentLines.value.length} lines`);
-            
-            lineRevealInterval.value = setInterval(() => {
-                visibleLines.value++;
-                
-                if (visibleLines.value >= contentLines.value.length) {
-                    clearInterval(lineRevealInterval.value);
-                    lineRevealInterval.value = null;
-                }
-            }, lineRevealDelay);
-        }, 500);
-    } else {
-        // Otherwise, just make the whole content visible at once
-        console.log("Using simple fade-in for content");
-        animationComplete.value = true;
-    }
+// Triggers the content to fade in
+function triggerContentFadeIn() {
+    console.log('Triggering content fade-in');
+    animationComplete.value = true;
 }
 
 // Fetch animation frames and preload them
@@ -206,7 +123,6 @@ onMounted(async () => {
                 return;
             }
 
-            // Preload all frames
             let loadedCount = 0;
             frames.value.forEach(frameFile => {
                 const img = new Image();
@@ -215,18 +131,15 @@ onMounted(async () => {
                     loadedCount++;
                     preloadedFrames.value = loadedCount;
                     if (loadedCount === frames.value.length) {
-                        // All frames are preloaded, start the animation
-                        startAnimation();
+                        startImageAnimation();
                     }
                 };
                 img.onerror = () => {
-                    loadedCount++; // Count errors as "loaded" to not stall indefinitely
+                    loadedCount++; 
                     preloadedFrames.value = loadedCount;
                     console.error(`Failed to load animation frame: ${frameFile}`);
-                    // Potentially set animationError here or handle partial animation
                     if (loadedCount === frames.value.length) {
-                         // If all (including errored ones) are processed
-                        if (preloadedFrames.value > 0 && !animationError.value) startAnimation();
+                        if (preloadedFrames.value > 0 && !animationError.value) startImageAnimation();
                         else if (!animationError.value) {
                             animationError.value = "Failed to load some animation frames";
                             animationLoading.value = false;
@@ -247,14 +160,8 @@ onMounted(async () => {
 
 // Clean up on component unmount
 onUnmounted(() => {
-    // if (animationInterval.value) {
-    //     clearInterval(animationInterval.value);
-    // }
     if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
-    }
-    if (lineRevealInterval.value) {
-        clearInterval(lineRevealInterval.value);
     }
 });
 </script>
@@ -311,13 +218,13 @@ onUnmounted(() => {
 
 .content-fade-in {
     opacity: 0;
-    transform: translateY(10px);
-    transition: opacity 1s ease-in-out, transform 1s ease-in-out;
+    clip-path: inset(0 0 100% 0); /* Clip from bottom to top */
+    transition: opacity 1s ease-in-out, clip-path 1s ease-in-out; /* Animate opacity and clip-path */
 }
 
 .content-fade-in.visible {
     opacity: 1;
-    transform: translateY(0);
+    clip-path: inset(0 0 0% 0); /* Reveal from top to bottom */
 }
 
 /* Markdown styling */
