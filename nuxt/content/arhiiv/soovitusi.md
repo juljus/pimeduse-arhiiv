@@ -1,4 +1,4 @@
-# Soovitusi
+# soovitusi
 
 ## Lugemist
 U. K. LeGuin “Pimeduse pahem käsi”

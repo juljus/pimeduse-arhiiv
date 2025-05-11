@@ -1,4 +1,4 @@
-# Ülistuslaul pimedusele
+# ülistuslaul pimedusele
 
 Pimedus võpatas ja pööras pilgu; taamal lähenes miski. Pooltoon pooltooni kaupa kahvatas ta, kuni temast sai soe hingav hämarus ning ta lõpuks ebakindla vilkuva varjuna hoopiski kadus. Tänava täitsid tuled, värelevad, värisevad, värvilised, alguses üks, siis mõni, siis juba kümne ringis, kuni viimaks voolas liivasel teel sadu helklevaid lampe. Mida rohkem neid nähtavale ilmus, seda püsivamaks muutus valgus, peegeldudes pronksehetelt, kuldtikanditelt, kirevatelt kivikestelt sandaalipaeltel. Hääbusid varjud ning pooltoonidest said selged punased, kuldsed ja türkiisid; midagi ei jäänud varjule, pehmesse voogavasse hämarusse.
 Öö hoidis hinge kinni.

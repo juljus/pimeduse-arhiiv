@@ -261,34 +261,6 @@ onUnmounted(() => {
     /* display: none; */ /* Hide error messages too */
 }
 
-/* Remove these CSS rules - no spinner */
-/* 
-.loading {
-    background: url('/loading-spinner.gif') center center no-repeat;
-    position: relative;
-}
-
-.loading::after {
-    content: '';
-    display: block;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    border: 3px solid rgba(255, 255, 255, 0.3);
-    border-top-color: white;
-    animation: spin 1s linear infinite;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    margin-top: -15px;
-    margin-left: -15px;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-*/
-
 /* Responsive adjustments */
 @media (min-width: 768px) {
     .animation-header {

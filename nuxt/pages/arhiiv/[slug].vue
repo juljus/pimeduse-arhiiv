@@ -1,23 +1,57 @@
 <template>
     <main>
-        <ContentRenderer v-if="page" :value="page" class="content-page prose" />
+        <div class="content-container">
+            <ContentRenderer 
+                v-if="page" 
+                :value="page" 
+                class="content-page prose content-fade-in" 
+                :class="{ 'visible': contentVisible }" 
+            />
+        </div>
     </main>
 </template>
 
 <script setup>
-    const route = useRoute()
+    import { ref, onMounted } from 'vue';
+    const route = useRoute();
+    const contentVisible = ref(false);
 
     const { data: page } = await useAsyncData(route.path, () => {
-        return queryCollection('arhiiv').path(route.path).first()
-    })
+        return queryCollection('arhiiv').path(route.path).first();
+    });
 
-    console.log(route.path)
+    // Trigger the reveal animation after a small delay
+    onMounted(() => {
+        // Small delay to ensure DOM is fully rendered
+        setTimeout(() => {
+            contentVisible.value = true;
+        }, 100);
+    });
 </script>
 
 <style>
+.content-container {
+    width: 100%;
+    max-width: 800px;
+    padding: 0 1rem 3rem;
+    margin: 0 auto;
+}
+
 .content-page {
     width: 100%;
     max-width: 100%;
+}
+
+/* Animation styles - same as on main page */
+.content-fade-in {
+    opacity: 0;
+    clip-path: inset(0 0 100% 0); /* Clip from bottom to top */
+    transition: opacity 1s ease-in-out, clip-path 1s ease-in-out; /* Animate opacity and clip-path */
+}
+
+.content-fade-in.visible {
+    opacity: 1;
+    clip-path: inset(0 0 0% 0); /* Reveal from top to bottom */
 }
 
 .content-page p {
@@ -46,6 +80,10 @@
 @media (min-width: 768px) {
     .content-page {
         width: 100%;
+    }
+    
+    .content-container {
+        padding: 0 2rem 3rem;
     }
 }
 

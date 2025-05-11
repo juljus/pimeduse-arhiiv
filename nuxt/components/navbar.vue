@@ -1,9 +1,14 @@
 <template>
     <div>
         <nav class="navbar">
-            <!-- Desktop navbar -->
+            <!-- Desktop navbar - now with logo and text instead of logo and image -->
             <div class="desktop-menu">
-                <a href="/" class="site-title">pimeduse arhiiv</a>
+                <a href="/" class="site-title">
+                    <div class="logo-title-combo">
+                        <img src="/main_logo_skeleton.png" alt="logo" class="site-logo" />
+                        <span class="desktop-site-title">pimeduse arhiiv</span>
+                    </div>
+                </a>
                 <div class="desktop-links">
                     <a href="/arhiiv/kirju">kirju</a>
                     <a href="/arhiiv/pimedusest">pimedusest</a>
@@ -12,14 +17,23 @@
                 </div>
             </div>
 
-            <!-- Mobile navbar -->
-            <div class="navbar-toggle" @click="toggleMenu" :class="{ open: menuOpen }">
-                <img v-if="!menuOpen" src="/menu_closed.png" alt="Open menu" />
-                <img v-else src="/menu_open.png" alt="Close menu" />
+            <!-- Mobile navbar with new hamburger icon -->
+            <div class="navbar-toggle" @click="toggleMenu">
+                <!-- Hamburger icon - three lines -->
+                <div class="hamburger-icon" :class="{ 'is-active': menuOpen }">
+                    <span class="line"></span>
+                    <span class="line"></span>
+                    <span class="line"></span>
+                </div>
             </div>
+            <!-- Menu slides underneath the fixed toggle button -->
             <div class="menu" :class="{ active: menuOpen }">
                 <ul>
-                    <li><a href="/">pimeduse arhiiv</a></li>
+                    <li class="logo-item">
+                        <a href="/" class="mobile-site-title">
+                            pimeduse arhiiv
+                        </a>
+                    </li>
                     <li><a href="/arhiiv/kirju">kirju</a></li>
                     <li><a href="/arhiiv/pimedusest">pimedusest</a></li>
                     <li><a href="/arhiiv/soovitusi">soovitusi</a></li>
@@ -91,12 +105,14 @@ export default {
     top: 0;
     left: 0;
     width: 100%;
-    padding: 1rem 2rem;
-    background-color: rgba(40, 40, 40, 0.95);
-    border-bottom: 1px solid #666;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    padding: 0.8rem 2rem; /* Slightly reduced padding to accommodate logo height */
+    background-color: #181818; /* Match mobile menu background */
+    border-bottom: 1px solid #333; /* Match mobile menu border style */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5); /* Enhanced shadow to match mobile */
     z-index: 999;
     pointer-events: auto;
+    align-items: center;
+    justify-content: space-between; /* Better spacing between logo and links */
 }
 
 .site-title {
@@ -104,119 +120,187 @@ export default {
     font-weight: bold;
     color: white;
     text-decoration: none;
-    margin-right: 2rem;
+    /* Removed margin-right as we're using justify-content: space-between */
 }
 
 .desktop-links {
     display: flex;
-    gap: 1.5rem;
+    gap: 1.8rem; /* Increased spacing between links to match mobile menu */
+    align-items: center; /* Ensure vertical centering of links */
 }
 
 .desktop-links a {
-    color: #ddd;
+    color: #f5f5f5; /* Match mobile menu text color */
     text-decoration: none;
     text-transform: lowercase;
-    transition: all 0.2s;
+    transition: all 0.25s cubic-bezier(0.19, 1, 0.22, 1); /* Match mobile menu transition */
     font-size: 1.05rem;
+    letter-spacing: 1px; /* Match mobile menu letter spacing */
+    padding-bottom: 0.3rem; /* Add padding for hover effect */
+    border-bottom: 1px solid transparent; /* For hover effect */
+    line-height: 1; /* Ensure consistent line height */
 }
 
 .desktop-links a:hover {
     color: white;
+    border-bottom: 1px solid #666; /* Add subtle underline effect on hover */
 }
 
+/* Updated navbar toggle with hamburger icon */
 .navbar-toggle {
     position: fixed;
-    top: 1rem;
-    right: 0;
+    top: 1.2rem;
+    right: 1.2rem;
     cursor: pointer;
-    transition: all 0.3s ease;
-    z-index: 1001;
-    background-color: #383838;
-    padding: 12px;  /* Equal padding on all sides */
-    width: 48px;    /* Fixed width */
-    height: 48px;   /* Fixed height to match width */
-    display: flex;  /* For centering the image */
+    transition: all 0.2s ease;
+    z-index: 1100;
+    background-color: transparent;
+    width: 40px;
+    height: 40px;
+    display: flex;
     align-items: center;
     justify-content: center;
-    border-top-left-radius: 3px;
-    border-bottom-left-radius: 3px;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-    font-weight: bold;
-    border-left: 2px solid #666;
-    border-top: 2px solid #666;
-    border-bottom: 2px solid #666;
-    box-shadow: -3px 3px 0px #222;
     pointer-events: auto;
-    box-sizing: border-box; /* Ensure padding is included in width/height */
+    box-sizing: border-box;
 }
 
-.navbar-toggle img {
-    width: 24px;
-    height: 24px;
+/* Hamburger icon styles */
+.hamburger-icon {
+    width: 28px;
+    height: 20px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.hamburger-icon .line {
     display: block;
+    width: 100%;
+    height: 2px;
+    background-color: white;
+    border-radius: 2px;
+    /* Match the new easing */
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.navbar-toggle:hover {
-    background-color: #4a4a4a;
+/* Animation for hamburger to X */
+.hamburger-icon.is-active .line:nth-child(1) {
+    transform: translateY(9px) rotate(45deg);
 }
 
-.navbar-toggle.open {
-    right: 250px;
-    box-shadow: -1px 1px 0px #222;
+.hamburger-icon.is-active .line:nth-child(2) {
+    opacity: 0;
 }
 
+.hamburger-icon.is-active .line:nth-child(3) {
+    transform: translateY(-9px) rotate(-45deg);
+}
+
+/* Updated menu styles with smoother animation without bouncing */
 .menu {
     position: fixed;
     top: 0;
     right: 0;
-    width: 250px;
+    width: 280px;
     height: 100%;
-    background-color: #383838;
-    padding: 2rem 1rem 1rem;
+    background-color: #181818;
+    padding: 5rem 1.5rem 2rem;
     transform: translateX(100%);
-    transition: transform 0.3s ease;
-    z-index: 1000;
-    border-left: 2px solid #666;
-    box-shadow: -5px 0px 15px rgba(0, 0, 0, 0.5);
+    /* Changed to a non-bouncy easing curve */
+    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 1050;
+    border-left: 1px solid #333;
+    box-shadow: -5px 0px 25px rgba(0, 0, 0, 0.5);
     pointer-events: auto;
+    /* Add overflow hidden to prevent content from being visible outside the menu */
+    overflow: hidden;
 }
 
+/* Keep the small delay but remove transition-delay for closing */
 .menu.active {
     transform: translateX(0);
+    transition-delay: 0.05s;
+}
+
+/* When menu is closing, no delay */
+.menu:not(.active) {
+    transition-delay: 0s;
 }
 
 .menu ul {
     list-style: none;
     padding: 0;
-    margin-top: 1rem;
+    margin-top: 1.5rem; /* More space at the top of the list */
 }
 
 .menu li {
-    margin: 1.5rem 0;
-    border-bottom: 1px solid #555;
-    padding-bottom: 0.5rem;
+    margin: 1.8rem 0; /* More vertical spacing between items */
+    border-bottom: 1px solid #333;
+    padding-bottom: 0.8rem; /* More padding below each item */
 }
 
 .menu a {
-    color: white;
+    color: #f5f5f5;
     text-decoration: none;
-    font-size: 1.1rem;
+    font-size: 1.2rem; /* Slightly larger text */
     letter-spacing: 1px;
     text-transform: lowercase;
-    transition: all 0.2s;
+    transition: all 0.25s cubic-bezier(0.19, 1, 0.22, 1); /* Matching easing */
 }
 
-.menu a:hover {
-    color: #ccc;
-    padding-left: 5px;
+/* Logo styles for desktop and mobile */
+.site-logo {
+    height: 36px; /* Slightly reduced for better alignment */
+    width: auto;
+    display: block;
 }
 
-.menu li:first-child a {
-    font-weight: bold;
-    font-size: 1.3rem;
-    display: inline-block;
-    padding-bottom: 0.3rem;
+.site-title-img {
+    height: 22px;
+    width: auto;
+    display: block;
+    margin-top: 2px; /* Small alignment adjustment */
+}
+
+.menu-logo {
+    height: 40px;
+    width: auto;
+    display: block;
+}
+
+.menu-title-img {
+    height: 26px;
+    width: auto;
+    display: block;
+    margin-top: 3px; /* Small alignment adjustment */
+}
+
+.logo-title-combo, .menu-logo-title-combo {
+    display: flex;
+    align-items: center; /* Ensure logo and text are vertically centered */
+    gap: 15px; /* Increased spacing between logo and text */
+}
+
+.menu-logo-title-combo {
+    margin-bottom: 0.5rem;
+}
+
+.logo-item {
+    border-bottom: none !important; /* Remove border from logo item */
+    margin-bottom: 2rem !important; /* Add more space after the logo */
+}
+
+/* Desktop site title text style */
+.desktop-site-title {
+    font-size: 1.5rem; /* Slightly increased from 1.4rem */
+    font-weight: 300;
+    letter-spacing: 0.5px;
+    color: white;
+    display: inline-block; /* Better for alignment */
+    line-height: 1; /* Consistent line height */
+    /* Removed position relative and top offset */
+    margin-top: 3px; /* Adjusted for better vertical alignment */
 }
 
 /* Responsive styles */
@@ -233,5 +317,16 @@ export default {
     .menu {
         display: none;
     }
+}
+
+/* Updated mobile site title (plain text) */
+.mobile-site-title {
+    font-size: 1.8rem !important;
+    font-weight: 300 !important;
+    letter-spacing: 0.5px !important;
+    color: white !important;
+    text-decoration: none !important;
+    padding-bottom: 0 !important;
+    text-transform: none !important;
 }
 </style>
