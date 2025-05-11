@@ -64,6 +64,7 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
+import { useImage } from '#image';
 
 // State for images and preview
 const images = ref([]);
@@ -72,18 +73,42 @@ const currentImage = ref('');
 const currentIndex = ref(0);
 const currentImageName = ref('');
 
-// Preload an image
+// Image options that match what <NuxtImg> in the modal will use
+const modalImageOptions = {
+  provider: 'ipx',
+  sizes: 'sm:100vw md:80vw lg:95vw'
+};
+
+// Preload an image with the same options that will be used in the modal
 function preloadImage(src) {
   if (!src || typeof window === 'undefined') return;
   console.log(`[Preload] Attempting to preload: ${src}`);
+  
+  // This uses the same processing logic as <NuxtImg> itself
+  const imgSrc = useImage(src, modalImageOptions);
+  
+  // Preload the actual processed image URL that will be requested by NuxtImg
   const img = new Image();
-  img.src = src;
+  img.src = imgSrc.value; // This will be the processed URL like /_ipx/...
   img.onload = () => {
-    console.log(`[Preload] Successfully preloaded: ${src}`);
+    console.log(`[Preload] Successfully preloaded: ${imgSrc.value}`);
   };
   img.onerror = (err) => {
-    // It's common for preloads to be cancelled by browser if not used soon, don't treat as critical error
-    console.log(`[Preload] Notice (not necessarily error) during preload of ${src}:`, err);
+    console.log(`[Preload] Notice during preload of ${imgSrc.value}:`, err);
+  };
+  
+  // Also preload the placeholder version with the same parameters that our modal will use
+  const placeholderOptions = {
+    provider: 'ipx',
+    width: 80,
+    quality: 20,
+    fit: 'contain'
+  };
+  const placeholderSrc = useImage(src, placeholderOptions);
+  const placeholderImg = new Image();
+  placeholderImg.src = placeholderSrc.value;
+  placeholderImg.onload = () => {
+    console.log(`[Preload] Successfully preloaded placeholder: ${placeholderSrc.value}`);
   };
 }
 
@@ -101,7 +126,7 @@ function openPreview(image) {
         document.body.style.overflow = 'hidden';
     }
 
-    // Preload next/previous images
+    // Preload adjacent images
     preloadAdjacentImages(currentIndex.value);
 }
 
@@ -198,9 +223,10 @@ onMounted(() => {
                     })
                     .map(file => `/pildid/${file}`);
                 console.log('images: ', images.value);
-                // Optional: Preload first few images for the modal if desired
-                // if (images.value.length > 0) preloadImage(images.value[0]);
-                // if (images.value.length > 1) preloadImage(images.value[1]);
+                // Preload the first few images that might be opened in the modal
+                if (images.value.length > 0) preloadImage(images.value[0]);
+                if (images.value.length > 1) preloadImage(images.value[1]);
+                if (images.value.length > 2) preloadImage(images.value[2]);
             } else {
                 errorMessage.value = 'No files found';
             }
