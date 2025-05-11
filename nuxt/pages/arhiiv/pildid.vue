@@ -48,18 +48,19 @@
                             <div class="loader"></div>
                         </div>
                         
-                        <!-- Actual image - low quality preview loads immediately, full image fades in -->
+                        <!-- Actual image with very low quality placeholder to show immediately -->
                         <NuxtImg 
                             :key="currentImage" 
                             :src="currentImage" 
                             class="modal-image" 
-                            :alt="currentImageName || 'Preview'" 
-                            @click.stop 
-                            provider="ipx" 
-                            sizes="sm:100vw md:80vw lg:95vw" 
-                            :modifiers="{quality: 90}"
+                            :alt="currentImageName || 'Preview'"
+                            @click.stop
+                            :placeholder="[currentImage, { width: 20, quality: 5 }]" 
+                            provider="ipx"
+                            sizes="sm:100vw md:80vw lg:95vw"
+                            :modifiers="{quality: 85}"
+                            fetchpriority="high"
                             loading="eager"
-                            :placeholder="[currentImage, { width: 40, quality: 10 }]"
                             @load="onImageLoaded"
                             :style="{ opacity: isImageLoading ? '0.3' : '1' }"
                         />
@@ -84,7 +85,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue';
 
 // State for images and preview
 const images = ref([]);
@@ -103,69 +104,76 @@ function onImageLoaded(event) {
     if (event && event.target) {
         const img = event.target;
         if (img.naturalWidth && img.naturalHeight) {
-            // Use the actual image dimensions for the placeholder
             imageAspectRatio.value = `${img.naturalWidth}/${img.naturalHeight}`;
         }
     }
+    
+    // ONLY start preloading after the current image has loaded
+    // This ensures proper priority
+    if (typeof window !== 'undefined') {
+        setTimeout(() => {
+            preloadAdjacentImages(currentIndex.value);
+        }, 100);
+    }
 }
 
-// More reliable preload function using fetch API with cache: 'force-cache'
+// Entirely separated preload function that runs in the background
+// and doesn't interfere with the current image display
 function preloadImage(src) {
-  if (!src || typeof window === 'undefined') return;
+  if (!src || typeof window === 'undefined' || src === currentImage.value) return;
+  
   console.log(`[Preload] Attempting to preload: ${src}`);
   
-  // First, preload the original image
-  fetch(src, { method: 'GET', mode: 'no-cors', cache: 'force-cache' })
-    .then(() => console.log(`[Preload] Successfully fetched original: ${src}`))
-    .catch(err => console.log(`[Preload] Error preloading ${src}:`, err));
+  // Create a background preloader that doesn't affect the current image
+  const preloader = document.createElement('div');
+  preloader.style.width = '0';
+  preloader.style.height = '0';
+  preloader.style.overflow = 'hidden';
+  preloader.style.position = 'absolute';
+  preloader.style.top = '-9999px';
+  preloader.style.left = '-9999px';
+  document.body.appendChild(preloader);
   
-  // Create a temporary img element to see what URL Nuxt Image generates
-  const tempImg = document.createElement('img');
-  tempImg.style.position = 'absolute';
-  tempImg.style.opacity = '0';
-  tempImg.style.pointerEvents = 'none';
-  tempImg.style.width = '1px';
-  tempImg.style.height = '1px';
-  document.body.appendChild(tempImg);
+  // Create an image to preload
+  const img = new Image();
+  img.src = src;
+  preloader.appendChild(img);
   
-  // Use a data attribute to identify this as preloading
-  tempImg.setAttribute('data-preload', 'true');
-  
-  // Set the src to trigger NuxtImg's URL transformation
-  tempImg.src = src;
-  
-  // Wait a bit for the image to potentially get its src rewritten by Nuxt Image
-  setTimeout(() => {
-    // If the src has been transformed to include _ipx or similar
-    if (tempImg.src !== src && (tempImg.src.includes('_ipx') || tempImg.src.includes('/_nuxt/image'))) {
-      const transformedSrc = tempImg.src;
-      console.log(`[Preload] Detected transformed URL: ${transformedSrc}`);
-      
-      // Now preload this transformed URL using fetch with force-cache
-      fetch(transformedSrc, { method: 'GET', mode: 'no-cors', cache: 'force-cache' })
-        .then(() => console.log(`[Preload] Successfully fetched transformed: ${transformedSrc}`))
-        .catch(err => console.log(`[Preload] Error preloading ${transformedSrc}:`, err));
-      
-      // Also load into browser's image cache
-      const imgCache = new Image();
-      imgCache.src = transformedSrc;
+  // Clean up after the image loads or errors
+  const cleanup = () => {
+    if (document.body.contains(preloader)) {
+      document.body.removeChild(preloader);
     }
-    
-    // Clean up temporary element
-    document.body.removeChild(tempImg);
-  }, 200); // Reduced timeout for faster processing
+  };
+  
+  img.onload = () => {
+    console.log(`[Preload] Successfully preloaded: ${src}`);
+    cleanup();
+  };
+  
+  img.onerror = () => {
+    console.log(`[Preload] Failed to preload: ${src}`);
+    cleanup();
+  };
+  
+  // Safety cleanup in case onload/onerror don't fire
+  setTimeout(cleanup, 5000);
 }
 
 // Open preview modal
 function openPreview(image) {
     console.log('Opening preview for:', image);
+    
+    // Set loading state and update image
     isImageLoading.value = true;
     currentImage.value = image;
     currentIndex.value = images.value.indexOf(image);
     
+    // Update image name
     const filename = image.split('/').pop();
     currentImageName.value = filename.replace(/\.[^/.]+$/, '');
     
+    // Show modal
     previewOpen.value = true;
     if (typeof document !== 'undefined') {
         document.body.style.overflow = 'hidden';
@@ -173,14 +181,9 @@ function openPreview(image) {
 
     // Reset aspect ratio to default when loading a new image
     imageAspectRatio.value = '16/9';
-
-    // Immediately preload adjacent images (but not the current one since we're already showing it)
-    if (typeof window !== 'undefined') {
-        // This delay allows the current image to take priority in loading
-        setTimeout(() => {
-            preloadAdjacentImages(currentIndex.value);
-        }, 300);
-    }
+    
+    // NOTE: preloadAdjacentImages is now called from onImageLoaded
+    // to ensure the current image loads first
 }
 
 // Close preview modal
@@ -202,12 +205,7 @@ function navigateToPrevious() {
         // Reset aspect ratio to default when loading a new image
         imageAspectRatio.value = '16/9';
         
-        // Preload adjacent images (for future navigation)
-        if (typeof window !== 'undefined') {
-            setTimeout(() => {
-                preloadAdjacentImages(currentIndex.value);
-            }, 300);
-        }
+        // NOTE: preloadAdjacentImages is now called from onImageLoaded
     }
 }
 
@@ -222,18 +220,16 @@ function navigateToNext() {
         // Reset aspect ratio to default when loading a new image
         imageAspectRatio.value = '16/9';
         
-        // Preload adjacent images (for future navigation)
-        if (typeof window !== 'undefined') {
-            setTimeout(() => {
-                preloadAdjacentImages(currentIndex.value);
-            }, 300);
-        }
+        // NOTE: preloadAdjacentImages is now called from onImageLoaded
     }
 }
 
-// Preload adjacent images (next 2, previous 2) - but not the current image
+// Preload adjacent images
 function preloadAdjacentImages(index) {
-    // Define the indices to preload in priority order, excluding the current index
+    // Skip preloading if we're currently viewing an image that needs priority
+    if (isImageLoading.value) return;
+    
+    // Define the indices to preload in priority order
     const indicesToPreload = [];
     
     // Next image has highest priority
@@ -256,9 +252,9 @@ function preloadAdjacentImages(index) {
         indicesToPreload.push(index - 2);
     }
     
-    // Queue preloads in priority order with small delays between them
+    // Queue preloads with small delays to avoid network congestion
     indicesToPreload.forEach((i, idx) => {
-        setTimeout(() => preloadImage(images.value[i]), idx * 100); // Small staggered delay
+        setTimeout(() => preloadImage(images.value[i]), idx * 150);
     });
 }
 
