@@ -48,7 +48,7 @@
                             <div class="loader"></div>
                         </div>
                         
-                        <!-- Actual image -->
+                        <!-- Actual image - low quality preview loads immediately, full image fades in -->
                         <NuxtImg 
                             :key="currentImage" 
                             :src="currentImage" 
@@ -57,6 +57,9 @@
                             @click.stop 
                             provider="ipx" 
                             sizes="sm:100vw md:80vw lg:95vw" 
+                            :modifiers="{quality: 90}"
+                            loading="eager"
+                            :placeholder="[currentImage, { width: 40, quality: 10 }]"
                             @load="onImageLoaded"
                             :style="{ opacity: isImageLoading ? '0.3' : '1' }"
                         />
@@ -150,7 +153,7 @@ function preloadImage(src) {
     
     // Clean up temporary element
     document.body.removeChild(tempImg);
-  }, 300);
+  }, 200); // Reduced timeout for faster processing
 }
 
 // Open preview modal
@@ -171,11 +174,12 @@ function openPreview(image) {
     // Reset aspect ratio to default when loading a new image
     imageAspectRatio.value = '16/9';
 
-    // Preload adjacent images
+    // Immediately preload adjacent images (but not the current one since we're already showing it)
     if (typeof window !== 'undefined') {
+        // This delay allows the current image to take priority in loading
         setTimeout(() => {
             preloadAdjacentImages(currentIndex.value);
-        }, 500);
+        }, 300);
     }
 }
 
@@ -198,10 +202,11 @@ function navigateToPrevious() {
         // Reset aspect ratio to default when loading a new image
         imageAspectRatio.value = '16/9';
         
+        // Preload adjacent images (for future navigation)
         if (typeof window !== 'undefined') {
             setTimeout(() => {
                 preloadAdjacentImages(currentIndex.value);
-            }, 500);
+            }, 300);
         }
     }
 }
@@ -217,17 +222,18 @@ function navigateToNext() {
         // Reset aspect ratio to default when loading a new image
         imageAspectRatio.value = '16/9';
         
+        // Preload adjacent images (for future navigation)
         if (typeof window !== 'undefined') {
             setTimeout(() => {
                 preloadAdjacentImages(currentIndex.value);
-            }, 500);
+            }, 300);
         }
     }
 }
 
-// Preload adjacent images (next 2, previous 2)
+// Preload adjacent images (next 2, previous 2) - but not the current image
 function preloadAdjacentImages(index) {
-    // Define the indices to preload in priority order
+    // Define the indices to preload in priority order, excluding the current index
     const indicesToPreload = [];
     
     // Next image has highest priority
@@ -250,9 +256,9 @@ function preloadAdjacentImages(index) {
         indicesToPreload.push(index - 2);
     }
     
-    // Queue preloads in priority order
-    indicesToPreload.forEach(i => {
-        setTimeout(() => preloadImage(images.value[i]), 0);
+    // Queue preloads in priority order with small delays between them
+    indicesToPreload.forEach((i, idx) => {
+        setTimeout(() => preloadImage(images.value[i]), idx * 100); // Small staggered delay
     });
 }
 
@@ -298,9 +304,12 @@ onMounted(() => {
                     })
                     .map(file => `/pildid/${file}`);
                 
-                // Conservatively preload just first image to avoid network congestion
-                if (images.value.length > 0) {
-                    setTimeout(() => preloadImage(images.value[0]), 500);
+                // Preload first few images in the background for better initial experience
+                if (typeof window !== 'undefined' && images.value.length > 0) {
+                    // Stagger preloads to avoid network congestion
+                    for (let i = 0; i < Math.min(5, images.value.length); i++) {
+                        setTimeout(() => preloadImage(images.value[i]), 1000 + (i * 300));
+                    }
                 }
             } else {
                 errorMessage.value = 'No files found';
