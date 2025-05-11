@@ -3,10 +3,14 @@
         <h1 class="text-2xl font-bold mb-6">Pildid</h1>
         
         <!-- Images Grid -->
-        <div class="image-grid">
+        <div class="image-grid" role="grid" aria-label="Image gallery">
             <div v-for="(image, index) in images" :key="index" 
                 class="image-container cursor-pointer hover:opacity-80 transition-all duration-300"
-                @click="openPreview(image)">
+                @click="openPreview(image)"
+                role="gridcell"
+                tabindex="0"
+                @keydown.enter="openPreview(image)"
+                :aria-label="`Image ${index + 1}: ${image.split('/').pop().replace(/\.[^/.]+$/, '')}`">
                 <NuxtImg :src="image" :alt="`Pilt ${index + 1}`" class="w-full h-full object-cover rounded-md" provider="ipx" sizes="sm:100vw md:50vw lg:200px" />
             </div>
         </div>
@@ -14,9 +18,12 @@
         <!-- Image Preview Modal -->
         <div v-show="previewOpen" 
             class="modal-overlay"
-            @click="closePreview">
+            @click="closePreview"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Image preview">
             <div class="modal-content" @click.stop>
-                <button @click="closePreview" class="modal-close">
+                <button @click="closePreview" class="modal-close" aria-label="Close preview">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -34,15 +41,20 @@
                 
                 <!-- Image -->
                 <div class="modal-image-container">
+                    <!-- Loading indicator -->
+                    <div v-if="isImageLoading" class="loading-indicator">
+                        <div class="loader"></div>
+                    </div>
                     <NuxtImg 
                         :key="currentImage" 
                         :src="currentImage" 
                         :placeholder="[currentImage, { width: 80, quality: 20, fit: 'contain' }]"
                         class="modal-image" 
-                        alt="Preview" 
+                        :alt="currentImageName || 'Preview'" 
                         @click.stop 
                         provider="ipx" 
                         sizes="sm:100vw md:80vw lg:95vw" 
+                        @load="onImageLoaded"
                     />
                     <!-- Image name display -->
                     <div class="image-name">{{ currentImageName }}</div>
@@ -64,8 +76,6 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
-// Remove the import for useImage
-// import { useImage } from '#image';
 
 // State for images and preview
 const images = ref([]);
@@ -73,47 +83,60 @@ const previewOpen = ref(false);
 const currentImage = ref('');
 const currentIndex = ref(0);
 const currentImageName = ref('');
+const isImageLoading = ref(false);
+const activePreloads = ref(0); // Track number of active preload operations
+const maxConcurrentPreloads = 4; // Limit concurrent preloads
+
+// Track when main image finishes loading
+function onImageLoaded() {
+    isImageLoading.value = false;
+}
 
 // Preload an image with common sizes that NuxtImg might use
 function preloadImage(src) {
-  if (!src || typeof window === 'undefined') return;
+  if (!src || typeof window === 'undefined' || activePreloads.value >= maxConcurrentPreloads) return;
+  
   console.log(`[Preload] Attempting to preload: ${src}`);
+  activePreloads.value++;
   
-  // Preload the original image first
-  const originalImg = new Image();
-  originalImg.src = src;
-  originalImg.onload = () => {
-    console.log(`[Preload] Successfully preloaded original: ${src}`);
-  };
+  // Preload original and most important responsive sizes
+  // To avoid excessive network requests, we're just preloading two key sizes
+  // that are likely to match what the modal might use
+  const imagesToPreload = [
+    src, // Original
+    `/_ipx/s_1024x0/q_80/${src}`, // Typical desktop/tablet size
+    `/_ipx/s_80x0/q_20/${src}` // Placeholder
+  ];
   
-  // Preload common sizes that NuxtImg might generate
-  // Create IPX-style URLs manually for different viewport widths
-  const imageSizes = [480, 768, 1024, 1920]; // Common responsive breakpoints
+  let loadedCount = 0;
   
-  imageSizes.forEach(size => {
-    // Create an optimized URL similar to what IPX might generate
-    // This is a simplified version and might need adjustment based on your actual IPX configuration
-    const optimizedSrc = `/_ipx/s_${size}x0/sm_1/${src}`;
+  imagesToPreload.forEach(imgSrc => {
+    const img = new Image();
+    img.src = imgSrc;
     
-    const sizedImg = new Image();
-    sizedImg.src = optimizedSrc;
-    sizedImg.onload = () => {
-      console.log(`[Preload] Successfully preloaded size ${size}: ${optimizedSrc}`);
+    const onComplete = () => {
+      loadedCount++;
+      if (loadedCount === imagesToPreload.length) {
+        activePreloads.value--;
+      }
+    };
+    
+    img.onload = () => {
+      console.log(`[Preload] Successfully preloaded: ${imgSrc}`);
+      onComplete();
+    };
+    
+    img.onerror = (err) => {
+      console.log(`[Preload] Notice during preload of ${imgSrc}:`, err);
+      onComplete();
     };
   });
-  
-  // Also preload a small version that might be used as a placeholder
-  const placeholderSrc = `/_ipx/s_80x0/q_20/${src}`;
-  const placeholderImg = new Image();
-  placeholderImg.src = placeholderSrc;
-  placeholderImg.onload = () => {
-    console.log(`[Preload] Successfully preloaded placeholder: ${placeholderSrc}`);
-  };
 }
 
 // Open preview modal
 function openPreview(image) {
     console.log('Opening preview for:', image);
+    isImageLoading.value = true;
     currentImage.value = image;
     currentIndex.value = images.value.indexOf(image);
     
@@ -131,7 +154,6 @@ function openPreview(image) {
 
 // Close preview modal
 function closePreview() {
-    console.log('Closing preview');
     previewOpen.value = false;
     if (typeof document !== 'undefined') {
         document.body.style.overflow = '';
@@ -141,6 +163,7 @@ function closePreview() {
 // Navigate to the previous image
 function navigateToPrevious() {
     if (currentIndex.value > 0) {
+        isImageLoading.value = true; // Show loading state
         currentIndex.value--;
         currentImage.value = images.value[currentIndex.value];
         currentImageName.value = currentImage.value.split('/').pop().replace(/\.[^/.]+$/, '');
@@ -151,6 +174,7 @@ function navigateToPrevious() {
 // Navigate to the next image
 function navigateToNext() {
     if (currentIndex.value < images.value.length - 1) {
+        isImageLoading.value = true; // Show loading state
         currentIndex.value++;
         currentImage.value = images.value[currentIndex.value];
         currentImageName.value = currentImage.value.split('/').pop().replace(/\.[^/.]+$/, '');
@@ -160,22 +184,33 @@ function navigateToNext() {
 
 // Preload adjacent images (next 2, previous 2)
 function preloadAdjacentImages(index) {
-    // Preload next image
+    // Define the indices to preload in priority order
+    const indicesToPreload = [];
+    
+    // Next image has highest priority
     if (index < images.value.length - 1) {
-        preloadImage(images.value[index + 1]);
+        indicesToPreload.push(index + 1);
     }
-    // Preload next+1 image
-    if (index < images.value.length - 2) {
-        preloadImage(images.value[index + 2]);
-    }
-    // Preload previous image
+    
+    // Previous image has second priority
     if (index > 0) {
-        preloadImage(images.value[index - 1]);
+        indicesToPreload.push(index - 1);
     }
-    // Preload previous-1 image
+    
+    // Then next+1
+    if (index < images.value.length - 2) {
+        indicesToPreload.push(index + 2);
+    }
+    
+    // Then prev-1
     if (index > 1) {
-        preloadImage(images.value[index - 2]);
+        indicesToPreload.push(index - 2);
     }
+    
+    // Queue preloads in priority order
+    indicesToPreload.forEach(i => {
+        setTimeout(() => preloadImage(images.value[i]), 0);
+    });
 }
 
 // Check if there's a previous image
@@ -212,20 +247,18 @@ onMounted(() => {
         .then((response) => response.json())
         .then((data) => {
             if (data.files) {
-                // Filter out system files like .DS_Store and add the directory path
                 images.value = data.files
                     .filter(file => {
-                        // Filter out .DS_Store and other non-image files
                         const isSystemFile = file === '.DS_Store';
                         const hasImageExtension = /\.(jpg|jpeg|png|gif|webp|svg|bmp|tiff)$/i.test(file);
                         return !isSystemFile && hasImageExtension;
                     })
                     .map(file => `/pildid/${file}`);
-                console.log('images: ', images.value);
-                // Preload the first few images that might be opened in the modal
-                if (images.value.length > 0) preloadImage(images.value[0]);
-                if (images.value.length > 1) preloadImage(images.value[1]);
-                if (images.value.length > 2) preloadImage(images.value[2]);
+                
+                // Conservatively preload just first image to avoid network congestion
+                if (images.value.length > 0) {
+                    setTimeout(() => preloadImage(images.value[0]), 500);
+                }
             } else {
                 errorMessage.value = 'No files found';
             }
@@ -338,6 +371,8 @@ onBeforeUnmount(() => {
     box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
     /* Add transition for smoother image changes */
     transition: opacity 0.3s ease;
+    position: relative;
+    z-index: 2;
 }
 
 /* Image name display */
@@ -451,5 +486,27 @@ onBeforeUnmount(() => {
     .image-container {
         height: 280px;
     }
+}
+
+/* Loading indicator styles */
+.loading-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+}
+
+.loader {
+    width: 48px;
+    height: 48px;
+    border: 5px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 </style>
