@@ -64,7 +64,8 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
-import { useImage } from '#image';
+// Remove the import for useImage
+// import { useImage } from '#image';
 
 // State for images and preview
 const images = ref([]);
@@ -73,42 +74,40 @@ const currentImage = ref('');
 const currentIndex = ref(0);
 const currentImageName = ref('');
 
-// Image options that match what <NuxtImg> in the modal will use
-const modalImageOptions = {
-  provider: 'ipx',
-  sizes: 'sm:100vw md:80vw lg:95vw'
-};
-
-// Preload an image with the same options that will be used in the modal
+// Preload an image with common sizes that NuxtImg might use
 function preloadImage(src) {
   if (!src || typeof window === 'undefined') return;
   console.log(`[Preload] Attempting to preload: ${src}`);
   
-  // This uses the same processing logic as <NuxtImg> itself
-  const imgSrc = useImage(src, modalImageOptions);
-  
-  // Preload the actual processed image URL that will be requested by NuxtImg
-  const img = new Image();
-  img.src = imgSrc.value; // This will be the processed URL like /_ipx/...
-  img.onload = () => {
-    console.log(`[Preload] Successfully preloaded: ${imgSrc.value}`);
-  };
-  img.onerror = (err) => {
-    console.log(`[Preload] Notice during preload of ${imgSrc.value}:`, err);
+  // Preload the original image first
+  const originalImg = new Image();
+  originalImg.src = src;
+  originalImg.onload = () => {
+    console.log(`[Preload] Successfully preloaded original: ${src}`);
   };
   
-  // Also preload the placeholder version with the same parameters that our modal will use
-  const placeholderOptions = {
-    provider: 'ipx',
-    width: 80,
-    quality: 20,
-    fit: 'contain'
-  };
-  const placeholderSrc = useImage(src, placeholderOptions);
+  // Preload common sizes that NuxtImg might generate
+  // Create IPX-style URLs manually for different viewport widths
+  const imageSizes = [480, 768, 1024, 1920]; // Common responsive breakpoints
+  
+  imageSizes.forEach(size => {
+    // Create an optimized URL similar to what IPX might generate
+    // This is a simplified version and might need adjustment based on your actual IPX configuration
+    const optimizedSrc = `/_ipx/s_${size}x0/sm_1/${src}`;
+    
+    const sizedImg = new Image();
+    sizedImg.src = optimizedSrc;
+    sizedImg.onload = () => {
+      console.log(`[Preload] Successfully preloaded size ${size}: ${optimizedSrc}`);
+    };
+  });
+  
+  // Also preload a small version that might be used as a placeholder
+  const placeholderSrc = `/_ipx/s_80x0/q_20/${src}`;
   const placeholderImg = new Image();
-  placeholderImg.src = placeholderSrc.value;
+  placeholderImg.src = placeholderSrc;
   placeholderImg.onload = () => {
-    console.log(`[Preload] Successfully preloaded placeholder: ${placeholderSrc.value}`);
+    console.log(`[Preload] Successfully preloaded placeholder: ${placeholderSrc}`);
   };
 }
 
