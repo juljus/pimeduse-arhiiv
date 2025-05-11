@@ -37,7 +37,7 @@
                     <NuxtImg 
                         :key="currentImage" 
                         :src="currentImage" 
-                        :placeholder="400"
+                        :placeholder="[currentImage, { width: 80, quality: 20, fit: 'contain' }]"
                         class="modal-image" 
                         alt="Preview" 
                         @click.stop 
@@ -74,9 +74,17 @@ const currentImageName = ref('');
 
 // Preload an image
 function preloadImage(src) {
-  if (!src || typeof window === 'undefined') return; // Ensure src exists and window is defined
+  if (!src || typeof window === 'undefined') return;
+  console.log(`[Preload] Attempting to preload: ${src}`);
   const img = new Image();
   img.src = src;
+  img.onload = () => {
+    console.log(`[Preload] Successfully preloaded: ${src}`);
+  };
+  img.onerror = (err) => {
+    // It's common for preloads to be cancelled by browser if not used soon, don't treat as critical error
+    console.log(`[Preload] Notice (not necessarily error) during preload of ${src}:`, err);
+  };
 }
 
 // Open preview modal
