@@ -41,22 +41,28 @@
                 
                 <!-- Image -->
                 <div class="modal-image-container">
-                    <!-- Loading indicator -->
-                    <div v-if="isImageLoading" class="loading-indicator">
-                        <div class="loader"></div>
+                    <!-- Placeholder frame - always visible -->
+                    <div class="image-placeholder" :style="{ aspectRatio: imageAspectRatio }">
+                        <!-- Loading indicator -->
+                        <div v-if="isImageLoading" class="loading-indicator">
+                            <div class="loader"></div>
+                        </div>
+                        
+                        <!-- Actual image -->
+                        <NuxtImg 
+                            :key="currentImage" 
+                            :src="currentImage" 
+                            class="modal-image" 
+                            :alt="currentImageName || 'Preview'" 
+                            @click.stop 
+                            provider="ipx" 
+                            sizes="sm:100vw md:80vw lg:95vw" 
+                            @load="onImageLoaded"
+                            :style="{ opacity: isImageLoading ? '0.3' : '1' }"
+                        />
                     </div>
-                    <NuxtImg 
-                        :key="currentImage" 
-                        :src="currentImage" 
-                        :placeholder="[currentImage, { width: 80, quality: 20, fit: 'contain' }]"
-                        class="modal-image" 
-                        :alt="currentImageName || 'Preview'" 
-                        @click.stop 
-                        provider="ipx" 
-                        sizes="sm:100vw md:80vw lg:95vw" 
-                        @load="onImageLoaded"
-                    />
-                    <!-- Image name display -->
+                    
+                    <!-- Image name display - always below the image/placeholder -->
                     <div class="image-name">{{ currentImageName }}</div>
                 </div>
                 
@@ -75,7 +81,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue';
 
 // State for images and preview
 const images = ref([]);
@@ -86,51 +92,106 @@ const currentImageName = ref('');
 const isImageLoading = ref(false);
 const activePreloads = ref(0); // Track number of active preload operations
 const maxConcurrentPreloads = 4; // Limit concurrent preloads
+const imageAspectRatio = ref('16/9'); // Default aspect ratio for the placeholder
 
-// Track when main image finishes loading
-function onImageLoaded() {
-    isImageLoading.value = false;
+// Store mappings of source URLs to optimized URLs 
+const optimizedUrlCache = ref(new Map());
+let probeElement = null;
+
+// Setup a probe image to discover how Nuxt Image transforms URLs
+function setupProbe() {
+  if (typeof window === 'undefined' || probeElement) return;
+  
+  // Create a hidden container for the probe
+  probeElement = document.createElement('div');
+  probeElement.style.position = 'absolute';
+  probeElement.style.visibility = 'hidden';
+  probeElement.style.pointerEvents = 'none';
+  probeElement.style.width = '0';
+  probeElement.style.height = '0';
+  probeElement.style.overflow = 'hidden';
+  document.body.appendChild(probeElement);
+
+  // Create an observer to watch for IMG elements with transformed src attributes
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach(mutation => {
+      if (mutation.type === 'attributes' && mutation.attributeName === 'src') {
+        const img = mutation.target;
+        const originalSrc = img.getAttribute('data-original-src');
+        const transformedSrc = img.getAttribute('src');
+        
+        if (originalSrc && transformedSrc && transformedSrc !== originalSrc) {
+          console.log(`[Probe] Detected URL pattern: ${originalSrc} → ${transformedSrc}`);
+          optimizedUrlCache.value.set(originalSrc, transformedSrc);
+        }
+      }
+    });
+  });
+  
+  // Start observing the probe element
+  observer.observe(probeElement, { 
+    attributes: true, 
+    childList: true,
+    subtree: true,
+    attributeFilter: ['src'] 
+  });
 }
 
-// Preload an image with common sizes that NuxtImg might use
+// Improved preload function using detected URL patterns
 function preloadImage(src) {
-  if (!src || typeof window === 'undefined' || activePreloads.value >= maxConcurrentPreloads) return;
-  
+  if (!src || typeof window === 'undefined') return;
   console.log(`[Preload] Attempting to preload: ${src}`);
-  activePreloads.value++;
   
-  // Preload original and most important responsive sizes
-  // To avoid excessive network requests, we're just preloading two key sizes
-  // that are likely to match what the modal might use
-  const imagesToPreload = [
-    src, // Original
-    `/_ipx/s_1024x0/q_80/${src}`, // Typical desktop/tablet size
-    `/_ipx/s_80x0/q_20/${src}` // Placeholder
-  ];
-  
-  let loadedCount = 0;
-  
-  imagesToPreload.forEach(imgSrc => {
-    const img = new Image();
-    img.src = imgSrc;
+  // First preload the original image
+  const imgOriginal = new Image();
+  imgOriginal.src = src;
+
+  // If we have a detected optimized URL for this source, preload it
+  if (optimizedUrlCache.value.has(src)) {
+    const optimizedUrl = optimizedUrlCache.value.get(src);
+    console.log(`[Preload] Using detected optimized URL: ${optimizedUrl}`);
     
-    const onComplete = () => {
-      loadedCount++;
-      if (loadedCount === imagesToPreload.length) {
-        activePreloads.value--;
-      }
-    };
+    const imgOptimized = new Image();
+    imgOptimized.src = optimizedUrl;
+    imgOptimized.onload = () => console.log(`[Preload] Successfully preloaded optimized: ${optimizedUrl}`);
+  } 
+  // Otherwise create a probe for this image to detect its URL pattern
+  else {
+    if (!probeElement) setupProbe();
     
-    img.onload = () => {
-      console.log(`[Preload] Successfully preloaded: ${imgSrc}`);
-      onComplete();
-    };
+    // Create a NuxtImg-like element to trigger the URL transformation
+    const img = document.createElement('img');
+    img.setAttribute('data-original-src', src);
+    img.setAttribute('data-nuxt-img', 'true');
+    img.setAttribute('provider', 'ipx');
+    img.setAttribute('sizes', 'sm:100vw md:80vw lg:95vw');
+    img.src = src;
     
-    img.onerror = (err) => {
-      console.log(`[Preload] Notice during preload of ${imgSrc}:`, err);
-      onComplete();
-    };
-  });
+    if (probeElement) {
+      probeElement.appendChild(img);
+      
+      // Remove after a short delay to keep the DOM clean
+      setTimeout(() => {
+        if (probeElement.contains(img)) {
+          probeElement.removeChild(img);
+        }
+      }, 1000);
+    }
+  }
+}
+
+// Track when main image finishes loading
+function onImageLoaded(event) {
+    isImageLoading.value = false;
+    
+    // Update the aspect ratio for the placeholder based on the loaded image
+    if (event && event.target) {
+        const img = event.target;
+        if (img.naturalWidth && img.naturalHeight) {
+            // Use the actual image dimensions for the placeholder
+            imageAspectRatio.value = `${img.naturalWidth}/${img.naturalHeight}`;
+        }
+    }
 }
 
 // Open preview modal
@@ -148,8 +209,16 @@ function openPreview(image) {
         document.body.style.overflow = 'hidden';
     }
 
+    // Reset aspect ratio to default when loading a new image
+    imageAspectRatio.value = '16/9';
+
     // Preload adjacent images
-    preloadAdjacentImages(currentIndex.value);
+    if (typeof window !== 'undefined') {
+        // Add a small delay to not interfere with the current image load
+        setTimeout(() => {
+            preloadAdjacentImages(currentIndex.value);
+        }, 500);
+    }
 }
 
 // Close preview modal
@@ -167,7 +236,15 @@ function navigateToPrevious() {
         currentIndex.value--;
         currentImage.value = images.value[currentIndex.value];
         currentImageName.value = currentImage.value.split('/').pop().replace(/\.[^/.]+$/, '');
-        preloadAdjacentImages(currentIndex.value);
+        
+        // Reset aspect ratio to default when loading a new image
+        imageAspectRatio.value = '16/9';
+        
+        if (typeof window !== 'undefined') {
+            setTimeout(() => {
+                preloadAdjacentImages(currentIndex.value);
+            }, 500);
+        }
     }
 }
 
@@ -178,7 +255,15 @@ function navigateToNext() {
         currentIndex.value++;
         currentImage.value = images.value[currentIndex.value];
         currentImageName.value = currentImage.value.split('/').pop().replace(/\.[^/.]+$/, '');
-        preloadAdjacentImages(currentIndex.value);
+        
+        // Reset aspect ratio to default when loading a new image
+        imageAspectRatio.value = '16/9';
+        
+        if (typeof window !== 'undefined') {
+            setTimeout(() => {
+                preloadAdjacentImages(currentIndex.value);
+            }, 500);
+        }
     }
 }
 
@@ -270,6 +355,20 @@ onMounted(() => {
     if (typeof window !== 'undefined') {
         window.addEventListener('keydown', handleKeyDown);
     }
+
+    // Set up URL detection probe after a short delay
+    if (typeof window !== 'undefined') {
+        setTimeout(() => {
+            setupProbe();
+            
+            // If images already loaded, preload the first few
+            if (images.value.length > 0) {
+                for (let i = 0; i < Math.min(3, images.value.length); i++) {
+                    setTimeout(() => preloadImage(images.value[i]), i * 200);
+                }
+            }
+        }, 1000);
+    }
 });
 
 // Clean up event listener when component unmounts
@@ -279,6 +378,12 @@ onBeforeUnmount(() => {
     }
     if (typeof document !== 'undefined') {
         document.body.style.overflow = ''; // Reset body overflow
+    }
+
+    // Clean up probe element
+    if (probeElement && typeof document !== 'undefined') {
+        document.body.removeChild(probeElement);
+        probeElement = null;
     }
 });
 </script>
@@ -380,6 +485,32 @@ onBeforeUnmount(() => {
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 100%;
+    height: 100%;
+    max-width: 95vw;
+    max-height: 90vh;
+}
+
+/* Image placeholder frame */
+.image-placeholder {
+    position: relative;
+    width: 100%;
+    max-width: 95vw;
+    max-height: 85vh;
+    background-color: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    transition: opacity 0.3s ease;
 }
 
 .image-name {
@@ -491,10 +622,7 @@ onBeforeUnmount(() => {
 /* Loading indicator styles */
 .loading-indicator {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 1;
+    z-index: 10;
 }
 
 .loader {
