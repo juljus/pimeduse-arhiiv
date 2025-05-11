@@ -81,7 +81,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 
 // State for images and preview
 const images = ref([]);
@@ -90,95 +90,7 @@ const currentImage = ref('');
 const currentIndex = ref(0);
 const currentImageName = ref('');
 const isImageLoading = ref(false);
-const activePreloads = ref(0); // Track number of active preload operations
-const maxConcurrentPreloads = 4; // Limit concurrent preloads
 const imageAspectRatio = ref('16/9'); // Default aspect ratio for the placeholder
-
-// Store mappings of source URLs to optimized URLs 
-const optimizedUrlCache = ref(new Map());
-let probeElement = null;
-
-// Setup a probe image to discover how Nuxt Image transforms URLs
-function setupProbe() {
-  if (typeof window === 'undefined' || probeElement) return;
-  
-  // Create a hidden container for the probe
-  probeElement = document.createElement('div');
-  probeElement.style.position = 'absolute';
-  probeElement.style.visibility = 'hidden';
-  probeElement.style.pointerEvents = 'none';
-  probeElement.style.width = '0';
-  probeElement.style.height = '0';
-  probeElement.style.overflow = 'hidden';
-  document.body.appendChild(probeElement);
-
-  // Create an observer to watch for IMG elements with transformed src attributes
-  const observer = new MutationObserver((mutations) => {
-    mutations.forEach(mutation => {
-      if (mutation.type === 'attributes' && mutation.attributeName === 'src') {
-        const img = mutation.target;
-        const originalSrc = img.getAttribute('data-original-src');
-        const transformedSrc = img.getAttribute('src');
-        
-        if (originalSrc && transformedSrc && transformedSrc !== originalSrc) {
-          console.log(`[Probe] Detected URL pattern: ${originalSrc} → ${transformedSrc}`);
-          optimizedUrlCache.value.set(originalSrc, transformedSrc);
-        }
-      }
-    });
-  });
-  
-  // Start observing the probe element
-  observer.observe(probeElement, { 
-    attributes: true, 
-    childList: true,
-    subtree: true,
-    attributeFilter: ['src'] 
-  });
-}
-
-// Improved preload function using detected URL patterns
-function preloadImage(src) {
-  if (!src || typeof window === 'undefined') return;
-  console.log(`[Preload] Attempting to preload: ${src}`);
-  
-  // First preload the original image
-  const imgOriginal = new Image();
-  imgOriginal.src = src;
-
-  // If we have a detected optimized URL for this source, preload it
-  if (optimizedUrlCache.value.has(src)) {
-    const optimizedUrl = optimizedUrlCache.value.get(src);
-    console.log(`[Preload] Using detected optimized URL: ${optimizedUrl}`);
-    
-    const imgOptimized = new Image();
-    imgOptimized.src = optimizedUrl;
-    imgOptimized.onload = () => console.log(`[Preload] Successfully preloaded optimized: ${optimizedUrl}`);
-  } 
-  // Otherwise create a probe for this image to detect its URL pattern
-  else {
-    if (!probeElement) setupProbe();
-    
-    // Create a NuxtImg-like element to trigger the URL transformation
-    const img = document.createElement('img');
-    img.setAttribute('data-original-src', src);
-    img.setAttribute('data-nuxt-img', 'true');
-    img.setAttribute('provider', 'ipx');
-    img.setAttribute('sizes', 'sm:100vw md:80vw lg:95vw');
-    img.src = src;
-    
-    if (probeElement) {
-      probeElement.appendChild(img);
-      
-      // Remove after a short delay to keep the DOM clean
-      setTimeout(() => {
-        if (probeElement.contains(img)) {
-          probeElement.removeChild(img);
-        }
-      }, 1000);
-    }
-  }
-}
 
 // Track when main image finishes loading
 function onImageLoaded(event) {
@@ -192,6 +104,53 @@ function onImageLoaded(event) {
             imageAspectRatio.value = `${img.naturalWidth}/${img.naturalHeight}`;
         }
     }
+}
+
+// More reliable preload function using fetch API with cache: 'force-cache'
+function preloadImage(src) {
+  if (!src || typeof window === 'undefined') return;
+  console.log(`[Preload] Attempting to preload: ${src}`);
+  
+  // First, preload the original image
+  fetch(src, { method: 'GET', mode: 'no-cors', cache: 'force-cache' })
+    .then(() => console.log(`[Preload] Successfully fetched original: ${src}`))
+    .catch(err => console.log(`[Preload] Error preloading ${src}:`, err));
+  
+  // Create a temporary img element to see what URL Nuxt Image generates
+  const tempImg = document.createElement('img');
+  tempImg.style.position = 'absolute';
+  tempImg.style.opacity = '0';
+  tempImg.style.pointerEvents = 'none';
+  tempImg.style.width = '1px';
+  tempImg.style.height = '1px';
+  document.body.appendChild(tempImg);
+  
+  // Use a data attribute to identify this as preloading
+  tempImg.setAttribute('data-preload', 'true');
+  
+  // Set the src to trigger NuxtImg's URL transformation
+  tempImg.src = src;
+  
+  // Wait a bit for the image to potentially get its src rewritten by Nuxt Image
+  setTimeout(() => {
+    // If the src has been transformed to include _ipx or similar
+    if (tempImg.src !== src && (tempImg.src.includes('_ipx') || tempImg.src.includes('/_nuxt/image'))) {
+      const transformedSrc = tempImg.src;
+      console.log(`[Preload] Detected transformed URL: ${transformedSrc}`);
+      
+      // Now preload this transformed URL using fetch with force-cache
+      fetch(transformedSrc, { method: 'GET', mode: 'no-cors', cache: 'force-cache' })
+        .then(() => console.log(`[Preload] Successfully fetched transformed: ${transformedSrc}`))
+        .catch(err => console.log(`[Preload] Error preloading ${transformedSrc}:`, err));
+      
+      // Also load into browser's image cache
+      const imgCache = new Image();
+      imgCache.src = transformedSrc;
+    }
+    
+    // Clean up temporary element
+    document.body.removeChild(tempImg);
+  }, 300);
 }
 
 // Open preview modal
@@ -214,7 +173,6 @@ function openPreview(image) {
 
     // Preload adjacent images
     if (typeof window !== 'undefined') {
-        // Add a small delay to not interfere with the current image load
         setTimeout(() => {
             preloadAdjacentImages(currentIndex.value);
         }, 500);
@@ -356,15 +314,13 @@ onMounted(() => {
         window.addEventListener('keydown', handleKeyDown);
     }
 
-    // Set up URL detection probe after a short delay
+    // Set up preloading after a short delay
     if (typeof window !== 'undefined') {
         setTimeout(() => {
-            setupProbe();
-            
-            // If images already loaded, preload the first few
+            // Preload the first few images for quicker initial modal experience
             if (images.value.length > 0) {
                 for (let i = 0; i < Math.min(3, images.value.length); i++) {
-                    setTimeout(() => preloadImage(images.value[i]), i * 200);
+                    setTimeout(() => preloadImage(images.value[i]), i * 300);
                 }
             }
         }, 1000);
