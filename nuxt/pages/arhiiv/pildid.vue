@@ -426,6 +426,16 @@ onBeforeUnmount(() => {
     justify-content: center;
 }
 
+.modal-close svg {
+    fill: none;
+    stroke: white;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    width: 24px;
+    height: 24px;
+}
+
 /* Direct styling of the image for maximum size */
 .modal-image {
     width: auto;
@@ -446,6 +456,7 @@ onBeforeUnmount(() => {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center; /* Added to center vertically */
     width: 100%;
     height: 100%;
     max-width: 95vw;
@@ -507,6 +518,16 @@ onBeforeUnmount(() => {
     z-index: 10000;
 }
 
+.nav-arrow svg {
+    fill: none;
+    stroke: white;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    width: 24px;
+    height: 24px;
+}
+
 .nav-arrow:hover {
     background-color: rgba(0, 0, 0, 0.6);
     transform: translateY(-50%) scale(1.1);
@@ -532,6 +553,16 @@ onBeforeUnmount(() => {
     /* Make navigation buttons more visible on mobile */
     .nav-arrow {
         background-color: rgba(0, 0, 0, 0.6);
+        width: 50px;
+        height: 50px;
+    }
+    
+    /* Ensure SVG icons are visible on mobile */
+    .nav-arrow svg,
+    .modal-close svg {
+        width: 28px;
+        height: 28px;
+        stroke-width: 2.5;
     }
 }
 
