@@ -32,6 +32,7 @@ magus lõhn kerkib keereldes kosmosesse
 kuni jõuab Maale
 kellegi unenägudesse
 hõbedase lohena…
+
 Ö: juba lapsena armastasin ma lohesid
 olenemata kas lugesin seiklusjuttu või vana muistendit
 kui loo lõpus ilmus välja kolmepäine tuldpurskav lohe
@@ -70,6 +71,7 @@ kuigi isa seletas, et dinosaurused on välja surnud
 ei tähendanud see mulle midagi
 terve õhtu istusin süngelt ja enesesse tõmbunult
 see lõhkus mu turvalise maailma ära
+
 Ö: kuidas teie suhe lohedega nüüd on?
 kas te usute
 et lohed
@@ -143,6 +145,7 @@ mida on kogu taevas täis
 hajus helendav taevas
 õhk on valgust täis
 kõik on valge
+
 O: Vahepeal lihtsalt oli öö 
 Ilmselt magasin
 Kui ärkasin hakkasin jälle mõtlema et draakoneid ei mõeldud välja
@@ -250,7 +253,6 @@ surm on kujuteldamat
 kujuteldamatuse kuju on lohe
 ehk võib põhimõtteliselt öelda
 et lohed on päriselt olemas
-
 
 O: Esialgu tundub mulle, et väga tore oleks, kui draakon vabaneks senisest tähenduskoormast, vähemalt tigedust ja tüli külvavast tähendusest,
 Aga eks selle tähenduse ole talle kaela riputanud needsamad ühiskonnad, ehk siis ma ei tea kes, võibolla algselt pahaaimamatud lugudevestjad, nagu küllap ma isegi,
