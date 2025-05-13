@@ -32,8 +32,10 @@ Aphex Twin "Selected Ambient Works Volume II"
 
 ## Vaatamist
 Mulholland Drive (2001)  
+Blue Velvet (1986)  
 Edward Scissorhands (1990)  
 Virgin Suicides (1999)  
 Perfect Days (2023)  
 Belle et Sébastien (2013)  
 In the Mood for Love (2000)  
+Twin Peaks (1990)  
