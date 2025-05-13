@@ -72,11 +72,11 @@ VANA-KREEKA
 Vana-Kreekas paistavad draakonid olevat elanud justkui metsloomadena kõrvalistes paikades, valvates sissepääse või maagilisi aardeid. Selle tõu viimased isendid said jahitrofeedeks, oma vägevusest hoolimata legendide kangelastele alla jäädes. Üks neist on Ladon, saja peaga madu, kelle iga pea rääkis eri keelt; tema hoolde oli Hera andnud oma kuldse õunapuu, mille oli jumalannale kinkinud maa ema Gaia. Ühe vägiteona aga tappis Herakles Ladoni, et saada kätte kolm õuna, kuigi võitlus nõudis teiste jumaluste abi ning alguses Herakles selle ees kohkus; teiste versioonide järgi uinutas ta lohe ja varastas õunad, kui see magas.
 
 VANA-EGIPTUS
-1. Nehebu-Kau
+I. Nehebu-Kau
 Vanas Egiptuses kohtame kahel jalal käivat madu, kelle nimi on  Nehebu-Kau - See, Kes Annab Hinge. Ka on Egiptuse mütoloogias hingeosake, mis eristab surnud hinge elavast, ning Neheb-Kaud peetakse selleks, kes pärast inimese surma tema hinge Ka-ga toidab. Olles üks esimestest Vana-Egiptuse jumalustest, on ta niivõrd iidne, et tema sünnilugu on ebaselge; on öeldud, et ta olevat lihtsalt maa seest esile kerkinud.
 Pärast seitsme kobra neelamist muutus ta nii võimsaks, et teda ei kahjusta ükski loits, tuli ega vesi ning varasemates tekstides, kus teda peetakse kurjaks, põgeneb tema eest isegi päikesejumal Ra. Nehebu-Kau rahustab maha iidne jumal Atom, puudutades tema seljalüli närvi oma sõrmeotsaga, ning alates Kirstukirjadest (The Coffin Texts) kujutatakse teda rahumeelse, õnnetoova ja abivalmina. Temast saab päikesejumal Ra sõber ja abiline. Hiljem Nehebu-Kaud austatakse ning tõstetakse ta neljakümne kahe jumala hulka, kes pärast inimese surma tema hinge saatuse üle otsustavad. Ta valvab väravat, mis ühendab surnute riiki elavate omaga, ja vaatab, et liigutaks õiges suunas; kes on surnute riiki pääsenud, on tema kaitse all ja saavad temalt toitu ja kõike eluks vajalikku. 
 Nehebu-Kaul on ka naine Nehemtawy - See, Kes Tunneb Ära Abivajaja. Kui imikud on hoitud, siis tegelikult hoiab neid oma süles Nehemtawy ning kui keegi pälvib oma palvetega Nehemtawy tähelepanu, siis ta saab justkui imikuna kätel kantud. Nehemtawy peakate kujutab püha pilli sistrumit, mille sahin meelitab kohale jumaliku rõõmu.
-2. Ouroborus
+II. Ouroborus
 Antiikmaailma maojumalatest tuntum kui Nehebu-Kau on Ouroboros. Ouroboros tähendab kreeka keeles “sabasööja”, pärit on ta Vana-Egiptusest ning tema sümbol, täiuslikku ringi moodustav ennastsööv madu, on olnud kasutusel 13. sajandist eKr tänapäevani. Eelkõige sümboliseerib ta aja tsüklilisust, kõige kordumist ja ümbersündi, sest on oma olemuselt igavene ja surematu madu, kes toitub iseennast süües või sünnib lakkamatult uuesti, sest viljastab end ise.
 
 PÕHJA KONN
@@ -173,3 +173,12 @@ mustendav öö
 Olematus lõhnab raskelt ja mõrkjalt
 ja justkui veidi magusalt
 
+kas öö ja paeva vahel on yldse midagi  
+on  
+kõik on öö ja päeva vahel  
+tõde on seal  
+hetkel mil yksikutest puudest on saamas mets  
+aga veel ei ole ta selleks saanud  
+silmapilk mil need eksisteerivad yheskoos  
+yksikud puud ja mets  
+samas ruumis samal ajal teineteisega kattudes nagu fyysilise vormita kiirgused  
