@@ -32,6 +32,8 @@ magus lõhn kerkib keereldes kosmosesse
 kuni jõuab Maale
 kellegi unenägudesse
 hõbedase lohena…
+
+
 Ö: juba lapsena armastasin ma lohesid
 olenemata kas lugesin seiklusjuttu või vana muistendit
 kui loo lõpus ilmus välja kolmepäine tuldpurskav lohe
@@ -48,29 +50,30 @@ valmis tema jaoks uus lugu
 uuel maal
 seitsme maa ja mere taga
 
-O: minul oli nooruspõlves lohedega raske suhe
-lapsena olid mu lemmikraamatuteks NSV-aegsed paksud entsüklopeediad
-mida ainult koos isaga tohtis kätte võtta ja lehitseda
-seal oli palju pilte
-ja kaunitel kaantel olid mittemidagitähendavad sõnad
-justkui nõiasõnad
+O: Minul oli nooruspõlves lohedega raske suhe
+Lapsena olid mu lemmikraamatuteks NSV-aegsed paksud entsüklopeediad
+Mida ainult koos isaga tohtis kätte võtta ja lehitseda
+Seal oli palju pilte
+Ja kaunitel kaantel olid mittemidagitähendavad sõnad
+Justkui nõiasõnad
 RAISUM
 SUNTORG
-aga mis kõige olulisem
-kõik selles raamatus oli tõde
-ükskord isaga entsüklopeediat lugedes
-jõudsime me dinosauruste juurde
-kes lohedega üsna sarnased on
-ning suurusskaalal oli kujutatud dinosaurus inimene auto ja maja
-aga dinosaurus oli majast suurem
+Aga mis kõige olulisem
+Kõik selles raamatus oli tõde
+Ükskord isaga entsüklopeediat lugedes
+Jõudsime me dinosauruste juurde
+Kes lohedega üsna sarnased on
+Ning suurusskaalal oli kujutatud dinosaurus inimene auto ja maja
+Aga dinosaurus oli majast suurem
 
-ta oli hiiglaslik
+Ta oli hiiglaslik
 
-kuigi isa seletas, et dinosaurused on välja surnud
-ei tähendanud see mulle midagi
-terve õhtu istusin süngelt ja enesesse tõmbunult
-see lõhkus mu turvalise maailma ära
-Ö: kuidas teie suhe lohedega nüüd on?
+Kuigi isa seletas, et dinosaurused on välja surnud
+Ei tähendanud see mulle midagi
+Terve õhtu istusin süngelt ja enesesse tõmbunult
+See lõhkus mu turvalise maailma ära
+
+Ö: ja kuidas teie suhe lohedega nüüd on?
 kas te usute
 et lohed
 on päriselt olemas?
@@ -143,6 +146,7 @@ mida on kogu taevas täis
 hajus helendav taevas
 õhk on valgust täis
 kõik on valge
+
 O: Vahepeal lihtsalt oli öö 
 Ilmselt magasin
 Kui ärkasin hakkasin jälle mõtlema et draakoneid ei mõeldud välja
