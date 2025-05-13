@@ -91,12 +91,12 @@ Teine ja üsna loomulik seos tekkis lohe ja jumala vahel. Kui kristlikus traditi
 Ei saa kõrvale jätta ka sellise loomariigi anomaalia eluohtlikke kalduvusi. Et eelmainitud pimedus, jumal ja armastus on samuti tihtipeale ebakindluse, valu või ka surma allikad, on üsna loomulik, et lohe purskab tuld või keerutab oma sabalöögiga üles meretorme. Nii võib lohe võrdustada ka surmaga. Antiikmütoloogia jumalad tapsid inimesi nagu kärbseid, pimedust ülistatakse ja kardetakse ning armastus on hella hingega inimesi hukutanud aegade algusest peale - nii käivad valu ja surm igaühega neist käsikäes.  
 Fantastilisus - sellist looma pole olemas ning juba seetõttu, kuid ka oma kultuurilise olulisuse tõttu on ta leidnud tee paljudesse seiklusjuttudesse ja lasteraamatutesse. Seost mängu ja kujutlusvõimega on täheldanud ka Eesti luuletaja ja tõlk Kalju Kangur oma luuletuses “Laul kurvameelsest lohemaost”.  
 
-JÄRELDUS
+JÄRELDUS  
 Lohe on sümbol, millega on võimalik edasi anda kujuteldamatut. Selleks võib olla pimedus, jumal, armastus, surm ja fantaasia, kuid need on kõik kujuteldamatud nähtused, mis siiski on inimese jaoks olnud läbi ajaloo elutähtsad ja ka eluohtlikud. Sellest võib järeldada, et lohe hõlmab eneses elu saladusi, selliseid saladusi, mis on kõikidest kõige olulisemad. 
 Lõpetan siinkohal taaskord õpetaja Toomas Tõnissoo sõnadega:  
 “Salapäraste asjade puhul/millede hulgas kõige salapärasem on elu /teati(,) et kohale on ilmunud suur madu(,)/draakonisarnane(,)/suurem kui ükski muu olend.” (vestlus Toomas Tõnissooga, 15.10.2024)  
 
-KOKKUVÕTE
+KOKKUVÕTE  
 Figureerides igas kultuuris mingil kujul, on lohe oma mõistatuslikkusega paelunud inimesi juba aastatuhandeid. Nagu sümbolitega ikka, tähendab ta erinevate rahvaste jaoks erinevatel ajastutel erinevaid asju, küündides lasteraamatu kaante vahelt kurjuse võrdkujuni ning mujal õnnetoova jumaluseni. Kui Hiina mütoloogias on ta üdini positiivne, lahke, võimas ja rõõmu sünnitav püha olend, siis Vana-Kreekas võimas, kuid võidetav vastane või metsloom. Vana-Egiptuses on ta palju müstilisem, küll jumalus, kuid seda pimeduse ja surma võtmes, ning juba ainuüksi Eestis on tal jälle niivõrd lai renomee, mida on mõjutanud ka kristlus, et peale seose üleloomulikuga oleks hooletu üldistusi teha.
 Lohe on igal pool ja kõik tema juures on kirju ja muutlik. Et ta liidab endas võimatuid loomade kehaosade ja omaduste kombinatsioone inimlikkusega, on paratamatu, et ainus üldistus, mida käesoleva uurimuse põhjal võib teha, on, et ta annab kuju kõigele kujuteldamatule.
 Pöördume tagasi uurimisküsimuse juurde, kas lohed on päriselt olemas. Edgar Allan Poe on öelnud, et “Nähtamatud asjad on ainsad tegelikkused”, ning kui see on nii ning lüürilisele küsimusele võib lüüriliselt vastata, saame öelda:
