@@ -1,6 +1,6 @@
 # pimedusest
 
-## ülistuslaul pimedusele
+## Ülistuslaul pimedusele
 
 Pimedus võpatas ja pööras pilgu; taamal lähenes miski. Pooltoon pooltooni kaupa kahvatas ta, kuni temast sai soe hingav hämarus ning ta lõpuks ebakindla vilkuva varjuna hoopiski kadus. Tänava täitsid tuled, värelevad, värisevad, värvilised, alguses üks, siis mõni, siis juba kümne ringis, kuni viimaks voolas liivasel teel sadu helklevaid lampe. Mida rohkem neid nähtavale ilmus, seda püsivamaks muutus valgus, peegeldudes pronksehetelt, kuldtikanditelt, kirevatelt kivikestelt sandaalipaeltel. Hääbusid varjud ning pooltoonidest said selged punased, kuldsed ja türkiisid; midagi ei jäänud varjule, pehmesse voogavasse hämarusse.  
 Öö hoidis hinge kinni.  
@@ -102,7 +102,7 @@ Lohe on igal pool ja kõik tema juures on kirju ja muutlik. Et ta liidab endas v
 Pöördume tagasi uurimisküsimuse juurde, kas lohed on päriselt olemas. Edgar Allan Poe on öelnud, et “Nähtamatud asjad on ainsad tegelikkused”, ning kui see on nii ning lüürilisele küsimusele võib lüüriliselt vastata, saame öelda:
 lohed on tõesti päriselt olemas!
 
-## pööripäevaöö
+## Pööriöö
 
 Kuldses päikeseloojangus on midagi naiselikku. See on lõputult soe, kuid mitte temperatuuri, vaid meeleolu mõttes; see on kiirgav ja ürgne ja naerev, kuid on ometi surma märk. Ta teab, et öö hiilib tal kannul, öö - suur sügavik kahe päeva vahel, pimeduse aeg, une aeg, armatsemise aeg, surma häbelik koputus.
 Sügavrohelist tiiki ümbritsesid vesipajud. Nende nõtked hõbetavad oksad olid vee kohal rippu nagu tantsijannade sirutatud pihad, nad õõtsusid õhtu õhus mingis olematus tuules. Muru oli siin pikk ja jahe ja niiske. Paljastel jalgadel hakkas külm.  
