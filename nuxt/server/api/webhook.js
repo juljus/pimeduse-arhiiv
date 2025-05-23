@@ -12,22 +12,31 @@ export default defineEventHandler(async (event) => {
     return { error: 'Method Not Allowed' };
   }
 
-  const signature = event.node.req.headers['x-hub-signature-256'];
+  // Log all headers to help debug
+  console.log('Webhook received with headers:', JSON.stringify(event.node.req.headers, null, 2));
+  
+  // Try both signature header formats that GitHub might use
+  const signature = event.node.req.headers['x-hub-signature-256'] || event.node.req.headers['x-hub-signature'];
+  
   // It's important to read the raw body as a Buffer for accurate hash calculation,
   // but h3's readBody parses it. We'll stringify it back for the HMAC calculation.
   const body = await readBody(event);
   const bodyString = JSON.stringify(body); // GitHub sends JSON payload
+  console.log('Request body received (truncated):', bodyString.substring(0, 100) + '...');
 
   // Check if webhook secret is configured on the server
   if (!GITHUB_WEBHOOK_SECRET) {
     console.error('CRITICAL: GITHUB_WEBHOOK_SECRET is not set on the server.');
+    console.log('Environment variables:', process.env);
     event.node.res.statusCode = 500;
     return { error: 'Server configuration error: Webhook secret not set.' };
   }
+  
+  console.log('Secret configuration found. Secret length:', GITHUB_WEBHOOK_SECRET.length);
 
   // Check if signature is provided in the request
   if (!signature) {
-    console.warn('Webhook request received without a signature.');
+    console.warn('Webhook request received without a signature. Expected header x-hub-signature-256 or x-hub-signature.');
     event.node.res.statusCode = 401;
     return { error: 'No signature provided. Ensure webhook is configured with a secret.' };
   }
@@ -56,7 +65,7 @@ export default defineEventHandler(async (event) => {
   }
 
   if (githubEvent === 'push') {
-    const scriptPath = '/root/pimeduse-arhiiv/nuxt/server/api/deploy.sh';
+    const scriptPath = '/var/www/pimeduse-arhiiv/nuxt/server/api/deploy.sh';
     
     console.log(`Executing deploy script (signature verified, absolute path): ${scriptPath}`);
 
