@@ -1,7 +1,6 @@
 export default defineEventHandler(async () => {
     const fs = await import('fs/promises'); // Dynamic import
     const path = await import('path');
-    
     const directoryPath = path.join(process.cwd(), 'content/arhiiv');
     
     try {
