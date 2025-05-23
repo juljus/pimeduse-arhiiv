@@ -11,7 +11,7 @@
                 tabindex="0"
                 @keydown.enter="openPreview(image)"
                 :aria-label="`Image ${index + 1}: ${image.split('/').pop().replace(/\.[^/.]+$/, '')}`">
-                <img :src="image" :alt="`Pilt ${index + 1}`" class="w-full h-full object-cover rounded-md" loading="lazy" />
+                <NuxtImg :src="image" :alt="`Pilt ${index + 1}`" class="w-full h-full object-cover rounded-md" provider="ipx" sizes="sm:100vw md:50vw lg:200px" />
             </div>
         </div>
         
@@ -48,13 +48,17 @@
                             <div class="loader"></div>
                         </div>
                         
-                        <!-- Actual image -->
-                        <img 
+                        <!-- Actual image with very low quality placeholder to show immediately -->
+                        <NuxtImg 
                             :key="currentImage" 
                             :src="currentImage" 
                             class="modal-image" 
                             :alt="currentImageName || 'Preview'"
                             @click.stop
+                            :placeholder="[currentImage, { width: 20, quality: 5 }]" 
+                            provider="ipx"
+                            sizes="sm:100vw md:80vw lg:95vw"
+                            :modifiers="{quality: 85}"
                             fetchpriority="high"
                             loading="eager"
                             @load="onImageLoaded"
